@@ -81,20 +81,32 @@ body{
   background:repeating-linear-gradient(45deg,var(--p-line) 0 1px,transparent 1px 14px);}
 .f-frame{position:absolute;inset:14px;border:1px solid var(--p-line);border-radius:11px;opacity:.5;pointer-events:none;}
 .f-frame2{position:absolute;inset:20px;border:0.5px solid var(--p-line);border-radius:8px;opacity:.28;pointer-events:none;}
-.f-top{width:100%;display:flex;justify-content:space-between;align-items:center;z-index:2;margin-top:4px;}
-.f-presence{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;}
-.f-edition{font-size:9px;letter-spacing:1.5px;color:var(--p-soft);}
-.f-rule{width:78%;height:0.5px;background:linear-gradient(90deg,transparent,var(--p-line),transparent);margin:10px 0;opacity:.6;z-index:2;}
-.f-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;z-index:2;min-height:0;gap:12px;}
-.f-logo{max-width:78%;max-height:130px;object-fit:contain;}
-.f-name{font-family:'Cormorant Garamond',Georgia,serif;color:var(--p-ink);font-weight:500;text-align:center;line-height:1;white-space:nowrap;}
-.f-namewrap{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;}
-.f-event{font-family:'Inter',system-ui,sans-serif;font-weight:500;text-transform:uppercase;text-align:center;color:var(--p-line);max-width:82%;line-height:1.25;letter-spacing:2px;z-index:2;}
-.f-loc{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;z-index:2;}
-.f-seal{position:relative;width:74px;height:74px;z-index:2;margin:6px 0;}
-.f-date{font-size:10px;letter-spacing:2.5px;color:var(--p-ink);opacity:.85;z-index:2;margin-top:2px;}
-.f-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;min-height:14px;}
-.f-rarity{position:absolute;bottom:16px;right:18px;font-size:12px;z-index:3;}
+.f-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2;margin-top:4px;flex:none;}
+.f-presence{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.f-edition{font-size:9px;letter-spacing:1.5px;color:var(--p-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%;text-align:right;}
+.f-rule{width:78%;height:0.5px;background:linear-gradient(90deg,transparent,var(--p-line),transparent);margin:8px 0;opacity:.6;z-index:2;flex:none;}
+.f-hero{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;z-index:2;min-height:0;gap:10px;}
+.f-logo{max-width:78%;max-height:112px;object-fit:contain;}
+.f-name{font-family:'Cormorant Garamond',Georgia,serif;color:var(--p-ink);font-weight:500;text-align:center;line-height:1;white-space:nowrap;max-width:90%;overflow-wrap:anywhere;}
+.f-namewrap{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;}
+.f-event{font-family:'Inter',system-ui,sans-serif;font-weight:500;text-transform:uppercase;text-align:center;color:var(--p-line);max-width:84%;line-height:1.25;letter-spacing:2px;z-index:2;overflow-wrap:anywhere;word-break:break-word;}
+.f-loc{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;z-index:2;flex:none;max-width:92%;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}
+.f-seal{position:relative;width:74px;height:74px;z-index:2;margin:4px 0;flex:none;}
+.seal-shimmer{
+  position:absolute;inset:0;pointer-events:none;border-radius:50%;
+  mix-blend-mode:color-dodge;
+  background:repeating-linear-gradient(115deg,#6b4e1e 0%,#f6d889 12%,#b8893a 24%,#ffe9a8 36%,#8a6526 48%,#f6d889 60%);
+  background-size:240% 240%;
+  background-position:calc(var(--mx,50%)*1.4) calc(var(--my,50%)*1.4);
+  filter:brightness(.85) contrast(1.4) saturate(1.1);
+  opacity:calc(var(--glare,.22) * 0.8);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-size:74px 74px;mask-size:74px 74px;
+  -webkit-mask-position:center;mask-position:center;
+}
+.f-date{font-size:10px;letter-spacing:2.5px;color:var(--p-ink);opacity:.85;z-index:2;margin-top:2px;flex:none;max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.f-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;min-height:16px;flex:none;max-width:74%;text-align:center;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}
+.f-rarity{position:absolute;bottom:14px;right:16px;font-size:12px;z-index:3;}
 
 /* ---------- BACK ---------- */
 .back{
@@ -310,12 +322,29 @@ function fitName(){
   const el=document.getElementById('o-name');
   if(logoData){el.style.display='none';return;}
   el.style.display='block';
-  const maxW=300*0.74;           // card width minus padding
+  const maxW=300*0.80;           // usable width inside the card padding
   let size=52;
+  // phase 1: shrink the single-line wordmark down to a sensible floor
+  el.style.whiteSpace='nowrap';
+  el.style.wordBreak='normal';
+  el.style.lineHeight='1';
   el.style.letterSpacing=(el.textContent.length>10?'2px':'5px');
   el.style.fontSize=size+'px';
   let guard=0;
-  while(el.scrollWidth>maxW && size>11 && guard<80){size-=1;el.style.fontSize=size+'px';guard++;}
+  while(el.scrollWidth>maxW && size>14 && guard<100){size-=1;el.style.fontSize=size+'px';guard++;}
+  // phase 2: still too wide → let it wrap (breaking long tokens) to at most 2 lines
+  if(el.scrollWidth>maxW){
+    el.style.whiteSpace='normal';
+    el.style.wordBreak='break-word';
+    el.style.lineHeight='1.04';
+    el.style.letterSpacing='1px';
+    let g2=0;
+    while(g2<100 && size>9){
+      const lines=Math.round(el.scrollHeight/(size*1.06));
+      if(lines<=2) break;
+      size-=1;el.style.fontSize=size+'px';g2++;
+    }
+  }
 }
 
 function fitEvent(){
@@ -324,13 +353,13 @@ function fitEvent(){
   if(!raw){el.style.display='none';return;}
   el.style.display='block';
   el.textContent=raw.toUpperCase();
-  el.style.letterSpacing=(raw.length>22?'1px':'2px');
+  el.style.letterSpacing=(raw.length>34?'0.4px':raw.length>22?'1px':'2px');
   // start one notch below the venue name, then shrink to fit a max of two lines
   const lh=1.25;
   let size=16;
   el.style.fontSize=size+'px';
   let guard=0;
-  while(guard<70 && size>9){
+  while(guard<100 && size>8){
     el.style.fontSize=size+'px';
     const lines=Math.round(el.scrollHeight/(size*lh));
     if(lines<=2) break;
@@ -338,29 +367,97 @@ function fitEvent(){
   }
 }
 
-function buildSeal(){
-  const p=PAL[theme];
-  // neutral verification seal — NO Glyph wordmark on the front
+/* ---- security seal: procedural guilloché + microtext ---- */
+// FNV-1a hash → deterministic seed from the venue string
+function seedFrom(str){
+  let h=2166136261>>>0;
+  for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
+  return h>>>0;
+}
+// small seeded PRNG (mulberry32)
+function rng(seed){
+  let a=seed>>>0;
+  return function(){
+    a=a+0x6D2B79F5|0;
+    let t=Math.imul(a^a>>>15,1|a);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
+}
+// overlapping sine-rosette contours (spirograph-style), unique per venue.
+// Each concentric ring is phase-twisted so neighbours cross → interwoven net.
+function guillochePath(seed){
+  const r=rng(seed), cx=37, cy=37;
+  const k1=4+Math.floor(r()*5);   // primary lobes 4..8
+  const k2=9+Math.floor(r()*9);   // fine harmonic  9..17
+  const ph1=r()*Math.PI*2, ph2=r()*Math.PI*2;
+  const a=1.0+r()*0.9, b=0.4+r()*0.6;
+  const twist=0.35+r()*0.5;
+  const steps=180;
+  let d='', ring=0;
+  for(let R=23.5; R>=8.5; R-=2.1){
+    const rot1=ph1+ring*twist, rot2=ph2-ring*twist*0.6;
+    for(let i=0;i<=steps;i++){
+      const t=i/steps*Math.PI*2;
+      const rr=R + a*Math.cos(k1*t+rot1) + b*Math.cos(k2*t+rot2);
+      const x=cx+rr*Math.cos(t), y=cy+rr*Math.sin(t);
+      d+=(i?'L':'M')+x.toFixed(2)+','+y.toFixed(2);
+    }
+    d+='Z'; ring++;
+  }
+  return d;
+}
+function escapeXml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+// the visible seal SVG: faint guilloché watermark + hairline microtext ring + emblem
+function sealSVG(g,venue,date,p){
+  const micro=((venue||'GLYPH')+'   ·   '+(date||'')+'   ·   ').toUpperCase();
+  const circ=2*Math.PI*31, charW=3.0*0.6+0.45;
+  const reps=Math.max(2,Math.ceil(circ/(micro.length*charW))+1);
+  const microText=escapeXml(micro.repeat(reps));
   return `<svg viewBox="0 0 74 74" width="74" height="74">
+    <defs>
+      <clipPath id="sealclip"><circle cx="37" cy="37" r="25.5"/></clipPath>
+      <path id="microring" d="M 37,6 a 31,31 0 1,1 -0.01,0" fill="none"/>
+    </defs>
+    <g clip-path="url(#sealclip)" fill="none" stroke="${p.line}" stroke-width="0.25" opacity="0.16">
+      <path d="${g}"/>
+    </g>
     <circle cx="37" cy="37" r="35" fill="none" stroke="${p.line}" stroke-width="0.8" opacity="0.6"/>
     <circle cx="37" cy="37" r="28" fill="none" stroke="${p.line}" stroke-width="0.4" opacity="0.35"/>
-    <path id="sealpath" d="M 37,15 a 22,22 0 1,1 -0.01,0" fill="none"/>
-    <text font-family="Inter,sans-serif" font-size="5.6" letter-spacing="2.9" fill="${p.line}" opacity="0.85">
-      <textPath href="#sealpath" startOffset="2">VERIFIED · PRESENCE · 2026 ·</textPath>
+    <text font-family="Inter,sans-serif" font-size="3.05" letter-spacing="0.45" fill="${p.line}" opacity="0.5">
+      <textPath href="#microring" startOffset="0">${microText}</textPath>
     </text>
     <text x="37" y="44" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="20" fill="${p.line}">✦</text>
   </svg>`;
+}
+
+// render seal + a holo-masked shimmer layer that catches the same fixed light
+function renderSeal(){
+  const host=document.getElementById('o-seal');
+  const venue=document.getElementById('venue').value||'';
+  const date=document.getElementById('date').value||'';
+  const p=PAL[theme];
+  const g=guillochePath(seedFrom(venue||'GLYPH'));
+  host.innerHTML=sealSVG(g,venue,date,p)+'<div class="seal-shimmer"></div>';
+  // mask a moving holo gradient to the guilloché lines only → they shimmer on tilt
+  const sh=host.querySelector('.seal-shimmer');
+  const maskSvg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 74 74'><path d='"+g+"' fill='none' stroke='#fff' stroke-width='0.6' stroke-linejoin='round'/></svg>";
+  const uri="url(\"data:image/svg+xml,"+encodeURIComponent(maskSvg)+"\")";
+  sh.style.webkitMaskImage=uri; sh.style.maskImage=uri;
 }
 
 function render(){
   applyPalette();
   const v=document.getElementById('venue').value||' ';
   document.getElementById('o-name').textContent=v.toUpperCase();
-  document.getElementById('o-loc').textContent=(document.getElementById('loc').value||'').toUpperCase();
+  const locEl=document.getElementById('o-loc');
+  locEl.textContent=(document.getElementById('loc').value||'').toUpperCase();
+  locEl.style.letterSpacing=(locEl.textContent.length>24?'1.5px':'4px');
   document.getElementById('o-date').textContent=(document.getElementById('date').value||'').toUpperCase();
   document.getElementById('o-edition').textContent=document.getElementById('edition').value||'';
   document.getElementById('o-tag').textContent=document.getElementById('tag').value||'';
-  document.getElementById('o-seal').innerHTML=buildSeal();
+  renderSeal();
   const sym=RARITIES.find(r=>r.id===rarity).sym;
   document.getElementById('o-rsym').textContent=sym;
   document.getElementById('o-rsym').style.color=PAL[theme].line;
