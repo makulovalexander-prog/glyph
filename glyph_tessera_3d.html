@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Glyph · Tessera Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0E0E10; --panel:#161618; --line:#2A2A2D; --ink:#ECEAE3; --soft:#8A8880;
+  --accent:#C9A876;
+  /* palette vars, overwritten by JS */
+  --p-bg1:#16161A; --p-bg2:#0A0A0C; --p-ink:#ECEAE3; --p-soft:#86847C; --p-line:#C9A876;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+  min-height:100vh;padding:24px;
+}
+.shell{max-width:1040px;margin:0 auto;}
+.masthead{margin-bottom:8px;}
+.kicker{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--soft);margin-bottom:5px;}
+.title{font-size:22px;font-weight:600;}
+.subtitle{font-size:13px;color:var(--soft);line-height:1.5;margin-top:4px;max-width:640px;}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:28px;margin-top:24px;}
+@media(max-width:820px){.grid{grid-template-columns:1fr;}}
+
+/* ---- controls ---- */
+.controls{display:flex;flex-direction:column;gap:13px;}
+.field label{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--soft);margin-bottom:5px;}
+.field input{width:100%;background:var(--panel);border:0.5px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);font-size:13px;font-family:inherit;}
+.field input:focus{outline:none;border-color:var(--accent);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.logo-drop{border:1px dashed var(--line);border-radius:10px;padding:13px;text-align:center;cursor:pointer;background:var(--panel);transition:border-color .15s;}
+.logo-drop:hover{border-color:var(--accent);}
+.logo-drop input{display:none;}
+.logo-drop .lt{font-size:12px;color:var(--ink);}
+.logo-drop .ls{font-size:10px;color:var(--soft);margin-top:3px;}
+.logo-status{display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;font-size:11px;color:var(--soft);}
+.logo-status button{background:transparent;border:0.5px solid var(--line);border-radius:6px;padding:3px 8px;font-size:10px;color:var(--soft);cursor:pointer;font-family:inherit;}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{flex:1;min-width:60px;border-radius:8px;padding:9px 4px;cursor:pointer;border:1.5px solid transparent;text-align:center;font-size:10px;font-weight:500;letter-spacing:.5px;transition:all .15s;}
+.chip.sel{box-shadow:0 0 0 1.5px var(--ink);}
+.rarity-chips{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.rchip{border:0.5px solid var(--line);border-radius:8px;padding:9px;cursor:pointer;font-size:11px;color:var(--soft);transition:all .15s;display:flex;align-items:center;gap:7px;letter-spacing:.3px;}
+.rchip .sym{font-size:13px;}
+.rchip.sel{border-color:var(--accent);color:var(--ink);background:rgba(201,168,118,.08);}
+
+/* ---- stage ---- */
+.stage{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 30%, #1A1A1E 0%, #0A0A0C 70%);
+  border:0.5px solid var(--line);border-radius:16px;padding:36px 20px 28px;min-height:560px;
+  position:relative;overflow:hidden;
+}
+.stage-hint{position:absolute;top:14px;left:0;right:0;text-align:center;font-size:11px;color:var(--soft);letter-spacing:1px;opacity:.7;}
+.scene{perspective:1300px;width:300px;height:420px;}
+.card{
+  position:relative;width:300px;height:420px;
+  transform-style:preserve-3d;
+  transform:rotateX(var(--rx,8deg)) rotateY(var(--ry,-14deg));
+  transition:transform .12s ease-out;
+  cursor:grab;touch-action:none;
+  will-change:transform;
+}
+.card:active{cursor:grabbing;}
+.face{
+  position:absolute;inset:0;border-radius:18px;overflow:hidden;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:0 30px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
+}
+
+/* ---------- FRONT ---------- */
+.front{
+  background:linear-gradient(155deg,var(--p-bg1),var(--p-bg2));
+  display:flex;flex-direction:column;align-items:center;
+  padding:22px 20px 18px;
+}
+.f-tex{position:absolute;inset:0;opacity:.04;pointer-events:none;
+  background:repeating-linear-gradient(45deg,var(--p-line) 0 1px,transparent 1px 14px);}
+.f-frame{position:absolute;inset:14px;border:1px solid var(--p-line);border-radius:11px;opacity:.5;pointer-events:none;}
+.f-frame2{position:absolute;inset:20px;border:0.5px solid var(--p-line);border-radius:8px;opacity:.28;pointer-events:none;}
+.f-top{width:100%;display:flex;justify-content:space-between;align-items:center;z-index:2;margin-top:4px;}
+.f-presence{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;}
+.f-edition{font-size:9px;letter-spacing:1.5px;color:var(--p-soft);}
+.f-rule{width:78%;height:0.5px;background:linear-gradient(90deg,transparent,var(--p-line),transparent);margin:10px 0;opacity:.6;z-index:2;}
+.f-hero{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;z-index:2;min-height:0;gap:12px;}
+.f-logo{max-width:78%;max-height:130px;object-fit:contain;}
+.f-name{font-family:'Cormorant Garamond',Georgia,serif;color:var(--p-ink);font-weight:500;text-align:center;line-height:1;white-space:nowrap;}
+.f-namewrap{display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;}
+.f-event{font-family:'Inter',system-ui,sans-serif;font-weight:500;text-transform:uppercase;text-align:center;color:var(--p-line);max-width:82%;line-height:1.25;letter-spacing:2px;z-index:2;}
+.f-loc{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;z-index:2;}
+.f-seal{position:relative;width:74px;height:74px;z-index:2;margin:6px 0;}
+.f-date{font-size:10px;letter-spacing:2.5px;color:var(--p-ink);opacity:.85;z-index:2;margin-top:2px;}
+.f-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;min-height:14px;}
+.f-rarity{position:absolute;bottom:16px;right:18px;font-size:12px;z-index:3;}
+
+/* ---------- BACK ---------- */
+.back{
+  transform:rotateY(180deg);
+  background:linear-gradient(155deg,#14110B,#0A0A0C);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.b-guilloche{position:absolute;inset:0;opacity:.5;pointer-events:none;
+  background:
+    repeating-radial-gradient(circle at 50% 42%, transparent 0 7px, rgba(201,168,118,.07) 7px 8px),
+    conic-gradient(from 0deg at 50% 42%, rgba(201,168,118,.05), transparent 12%, rgba(201,168,118,.05) 24%, transparent 36%, rgba(201,168,118,.05) 48%, transparent 60%, rgba(201,168,118,.05) 72%, transparent 84%, rgba(201,168,118,.05) 100%);}
+.b-frame{position:absolute;inset:14px;border:1px solid rgba(201,168,118,.4);border-radius:11px;pointer-events:none;}
+.b-emblem{width:96px;height:96px;border-radius:50%;border:1px solid rgba(201,168,118,.5);display:flex;align-items:center;justify-content:center;z-index:2;margin-bottom:20px;position:relative;}
+.b-emblem::before{content:"";position:absolute;inset:7px;border:0.5px solid rgba(201,168,118,.3);border-radius:50%;}
+.b-emblem span{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--accent);}
+.b-word{font-family:'Cormorant Garamond',serif;font-size:30px;letter-spacing:8px;color:var(--accent);z-index:2;font-weight:600;}
+.b-sub{font-size:8px;letter-spacing:5px;color:var(--soft);text-transform:uppercase;z-index:2;margin-top:8px;}
+.b-foot{position:absolute;bottom:26px;font-size:7.5px;letter-spacing:3px;color:var(--soft);text-transform:uppercase;z-index:2;opacity:.7;}
+
+/* ---------- HOLO LAYERS ---------- */
+.holo{position:absolute;inset:0;border-radius:18px;pointer-events:none;mix-blend-mode:color-dodge;opacity:0;transition:opacity .2s;}
+.holo-rainbow{
+  background:repeating-linear-gradient(110deg,
+    #ff5f6d 0%, #ffc371 12%, #47e6b1 24%, #4aa3ff 36%, #a96bff 48%, #ff5f6d 60%);
+  background-size:300% 300%;
+  background-position:calc(var(--mx,50%)*1.4) calc(var(--my,50%)*1.4);
+  filter:brightness(.85) contrast(1.5) saturate(1.3);
+}
+.holo-prism{
+  background:repeating-linear-gradient(75deg,
+    rgba(255,0,128,.9) 0 6px, rgba(255,200,0,.9) 6px 12px, rgba(0,230,180,.9) 12px 18px,
+    rgba(0,150,255,.9) 18px 24px, rgba(170,0,255,.9) 24px 30px);
+  background-size:200% 200%;
+  background-position:calc(var(--mx,50%)*2) calc(var(--my,50%)*2);
+  filter:brightness(.8) contrast(1.6);
+}
+.holo-gold{
+  background:repeating-linear-gradient(110deg,
+    #6b4e1e 0%, #f6d889 14%, #b8893a 28%, #ffe9a8 42%, #8a6526 56%, #f6d889 70%);
+  background-size:300% 300%;
+  background-position:calc(var(--mx,50%)*1.5) calc(var(--my,50%)*1.5);
+  filter:brightness(.9) contrast(1.4);
+}
+.holo-sparkle{
+  mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -5'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:160px 160px;
+  background-position:calc(var(--mx,50%)) calc(var(--my,50%));
+  opacity:0;
+}
+.holo-glare{
+  mix-blend-mode:soft-light;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), rgba(255,255,255,.05) 38%, transparent 60%);
+  opacity:var(--glare,.25);
+}
+/* reverse-holo matte panel behind logo */
+.f-matte{position:absolute;left:11%;right:11%;top:24%;bottom:30%;border-radius:10px;
+  background:linear-gradient(155deg,var(--p-bg1),var(--p-bg2));z-index:1;display:none;}
+
+/* rarity activation */
+.card[data-rarity="holo"] .holo-rainbow{opacity:.55;}
+.card[data-rarity="holo"] .holo-sparkle{opacity:.5;}
+.card[data-rarity="holo"] .holo-glare{opacity:calc(var(--glare,.25) + .15);}
+.card[data-rarity="reverse"] .holo-rainbow{opacity:.5;}
+.card[data-rarity="reverse"] .holo-sparkle{opacity:.35;}
+.card[data-rarity="reverse"] .f-matte{display:block;}
+.card[data-rarity="prismatic"] .holo-prism{opacity:.5;}
+.card[data-rarity="prismatic"] .holo-sparkle{opacity:.6;}
+.card[data-rarity="prismatic"] .holo-glare{opacity:calc(var(--glare,.25) + .2);}
+.card[data-rarity="gold"] .holo-gold{opacity:.6;}
+.card[data-rarity="gold"] .holo-sparkle{opacity:.55;}
+.card[data-rarity="common"] .holo-glare{opacity:calc(var(--glare,.2));}
+
+/* controls under stage */
+.stage-controls{display:flex;gap:10px;margin-top:24px;z-index:5;}
+.sbtn{background:var(--panel);border:0.5px solid var(--line);border-radius:999px;padding:9px 18px;color:var(--ink);font-size:11px;letter-spacing:1.5px;cursor:pointer;font-family:inherit;text-transform:uppercase;transition:all .15s;}
+.sbtn:hover{border-color:var(--accent);}
+.sbtn.primary{background:var(--accent);color:#15130E;border-color:var(--accent);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="masthead">
+    <div class="kicker">Glyph · Tessera Studio</div>
+    <div class="title">3D Holographic Tessera</div>
+    <div class="subtitle">Drag the card to examine it under the light. Common Tessera are matte; rare ones catch the light — holographic, reverse-holo, prismatic, gold. The venue's identity lives on the front; Glyph lives on the back, like any collectible card.</div>
+  </div>
+
+  <div class="grid">
+    <div class="controls">
+      <div class="field">
+        <label>Venue logo (transparent PNG ideal)</label>
+        <label class="logo-drop">
+          <input type="file" id="logoInput" accept="image/*"/>
+          <div class="lt">Tap to upload the venue's logo</div>
+          <div class="ls">or leave empty for an elegant wordmark</div>
+        </label>
+        <div class="logo-status" id="logoStatus">
+          <span id="logoName"></span>
+          <button onclick="clearLogo()">Remove</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Venue name</label>
+        <input id="venue" value="HANUMAN" oninput="render()"/>
+      </div>
+      <div class="field">
+        <label>Event</label>
+        <input id="event" value="Tasting Menu N° 7" oninput="render()"/>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Location</label><input id="loc" value="Kreuzberg · Berlin" oninput="render()"/></div>
+        <div class="field"><label>Date</label><input id="date" value="28 May 2026" oninput="render()"/></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Edition</label><input id="edition" value="No. 247" oninput="render()"/></div>
+        <div class="field"><label>Tagline</label><input id="tag" value="Not a Trend; A Tradition" oninput="render()"/></div>
+      </div>
+      <div class="field">
+        <label>Frame palette</label>
+        <div class="chips" id="themes"></div>
+      </div>
+      <div class="field">
+        <label>Rarity</label>
+        <div class="rarity-chips" id="rarities"></div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="stage-hint">Drag to rotate · move across to shift the light</div>
+      <div class="scene" id="scene">
+        <div class="card" id="card" data-rarity="holo">
+          <!-- FRONT -->
+          <div class="face front" id="front">
+            <div class="f-tex"></div>
+            <div class="f-matte"></div>
+            <div class="f-frame"></div>
+            <div class="f-frame2"></div>
+            <div class="f-top">
+              <span class="f-presence">Tessera</span>
+              <span class="f-edition" id="o-edition">No. 247</span>
+            </div>
+            <div class="f-rule"></div>
+            <div class="f-hero">
+              <img class="f-logo" id="o-logo" style="display:none" alt=""/>
+              <div class="f-namewrap">
+                <div class="f-name" id="o-name">HANUMAN</div>
+                <div class="f-event" id="o-event">TASTING MENU N° 7</div>
+              </div>
+            </div>
+            <div class="f-loc" id="o-loc">KREUZBERG · BERLIN</div>
+            <div class="f-rule"></div>
+            <div class="f-seal" id="o-seal"></div>
+            <div class="f-date" id="o-date">28 MAY 2026</div>
+            <div class="f-tag" id="o-tag">Not a Trend; A Tradition</div>
+            <div class="f-rarity" id="o-rsym">◆</div>
+            <!-- holo overlays -->
+            <div class="holo holo-rainbow"></div>
+            <div class="holo holo-prism"></div>
+            <div class="holo holo-gold"></div>
+            <div class="holo holo-sparkle"></div>
+            <div class="holo holo-glare"></div>
+          </div>
+          <!-- BACK -->
+          <div class="face back">
+            <div class="b-guilloche"></div>
+            <div class="b-frame"></div>
+            <div class="b-emblem"><span>✦</span></div>
+            <div class="b-word">GLYPH</div>
+            <div class="b-sub">Verified Presence</div>
+            <div class="b-foot">Collect the real world · Berlin</div>
+            <div class="holo holo-rainbow"></div>
+            <div class="holo holo-sparkle"></div>
+            <div class="holo holo-glare"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stage-controls">
+        <button class="sbtn primary" onclick="flip()">Flip card</button>
+        <button class="sbtn" onclick="resetView()">Reset</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PAL={
+  Onyx:{bg1:'#16161A',bg2:'#0A0A0C',ink:'#ECEAE3',soft:'#86847C',line:'#C9A876',chip:'#16161A',ci:'#C9A876'},
+  Ivory:{bg1:'#F2EEE4',bg2:'#E2DCCE',ink:'#1B1A17',soft:'#736F64',line:'#9A7B3F',chip:'#E2DCCE',ci:'#7A5E2E'},
+  Bordeaux:{bg1:'#26121A',bg2:'#150A0F',ink:'#ECD8C6',soft:'#A98C7A',line:'#C9A172',chip:'#26121A',ci:'#D9B488'},
+  Verdant:{bg1:'#16221C',bg2:'#0C140F',ink:'#DDE7DD',soft:'#7E948A',line:'#AEC6A4',chip:'#16221C',ci:'#AEC6A4'},
+};
+const RARITIES=[
+  {id:'common',label:'Common',sym:'●'},
+  {id:'holo',label:'Holographic',sym:'◆'},
+  {id:'reverse',label:'Reverse Holo',sym:'◈'},
+  {id:'prismatic',label:'Prismatic',sym:'✦'},
+  {id:'gold',label:'Gold Secret',sym:'★'},
+];
+let theme='Onyx', rarity='holo', logoData=null;
+let flipped=false;
+
+function setVar(k,v){document.documentElement.style.setProperty(k,v);}
+
+function applyPalette(){
+  const p=PAL[theme];
+  setVar('--p-bg1',p.bg1);setVar('--p-bg2',p.bg2);setVar('--p-ink',p.ink);
+  setVar('--p-soft',p.soft);setVar('--p-line',p.line);
+}
+
+function fitName(){
+  const el=document.getElementById('o-name');
+  if(logoData){el.style.display='none';return;}
+  el.style.display='block';
+  const maxW=300*0.74;           // card width minus padding
+  let size=52;
+  el.style.letterSpacing=(el.textContent.length>10?'2px':'5px');
+  el.style.fontSize=size+'px';
+  let guard=0;
+  while(el.scrollWidth>maxW && size>11 && guard<80){size-=1;el.style.fontSize=size+'px';guard++;}
+}
+
+function fitEvent(){
+  const el=document.getElementById('o-event');
+  const raw=(document.getElementById('event').value||'').trim();
+  if(!raw){el.style.display='none';return;}
+  el.style.display='block';
+  el.textContent=raw.toUpperCase();
+  el.style.letterSpacing=(raw.length>22?'1px':'2px');
+  // start one notch below the venue name, then shrink to fit a max of two lines
+  const lh=1.25;
+  let size=16;
+  el.style.fontSize=size+'px';
+  let guard=0;
+  while(guard<70 && size>9){
+    el.style.fontSize=size+'px';
+    const lines=Math.round(el.scrollHeight/(size*lh));
+    if(lines<=2) break;
+    size-=1;guard++;
+  }
+}
+
+function buildSeal(){
+  const p=PAL[theme];
+  // neutral verification seal — NO Glyph wordmark on the front
+  return `<svg viewBox="0 0 74 74" width="74" height="74">
+    <circle cx="37" cy="37" r="35" fill="none" stroke="${p.line}" stroke-width="0.8" opacity="0.6"/>
+    <circle cx="37" cy="37" r="28" fill="none" stroke="${p.line}" stroke-width="0.4" opacity="0.35"/>
+    <path id="sealpath" d="M 37,15 a 22,22 0 1,1 -0.01,0" fill="none"/>
+    <text font-family="Inter,sans-serif" font-size="5.6" letter-spacing="2.9" fill="${p.line}" opacity="0.85">
+      <textPath href="#sealpath" startOffset="2">VERIFIED · PRESENCE · 2026 ·</textPath>
+    </text>
+    <text x="37" y="44" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="20" fill="${p.line}">✦</text>
+  </svg>`;
+}
+
+function render(){
+  applyPalette();
+  const v=document.getElementById('venue').value||' ';
+  document.getElementById('o-name').textContent=v.toUpperCase();
+  document.getElementById('o-loc').textContent=(document.getElementById('loc').value||'').toUpperCase();
+  document.getElementById('o-date').textContent=(document.getElementById('date').value||'').toUpperCase();
+  document.getElementById('o-edition').textContent=document.getElementById('edition').value||'';
+  document.getElementById('o-tag').textContent=document.getElementById('tag').value||'';
+  document.getElementById('o-seal').innerHTML=buildSeal();
+  const sym=RARITIES.find(r=>r.id===rarity).sym;
+  document.getElementById('o-rsym').textContent=sym;
+  document.getElementById('o-rsym').style.color=PAL[theme].line;
+  const logo=document.getElementById('o-logo');
+  if(logoData){logo.src=logoData;logo.style.display='block';document.getElementById('o-name').style.display='none';}
+  else{logo.style.display='none';}
+  document.getElementById('card').setAttribute('data-rarity',rarity);
+  fitName();
+  fitEvent();
+}
+
+/* logo upload */
+document.getElementById('logoInput').onchange=function(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{logoData=ev.target.result;
+    document.getElementById('logoStatus').style.display='flex';
+    document.getElementById('logoName').textContent=f.name;render();};
+  r.readAsDataURL(f);
+};
+function clearLogo(){logoData=null;document.getElementById('logoStatus').style.display='none';
+  document.getElementById('logoInput').value='';render();}
+
+/* palette + rarity chips */
+const tc=document.getElementById('themes');
+Object.keys(PAL).forEach(name=>{
+  const p=PAL[name];const d=document.createElement('div');
+  d.className='chip'+(name===theme?' sel':'');
+  d.style.background=p.chip;d.style.color=p.ci;d.style.border='0.5px solid '+p.line+'66';
+  d.textContent=name;
+  d.onclick=()=>{theme=name;[...tc.children].forEach(c=>c.classList.remove('sel'));d.classList.add('sel');render();};
+  tc.appendChild(d);
+});
+const rc=document.getElementById('rarities');
+RARITIES.forEach(r=>{
+  const d=document.createElement('div');
+  d.className='rchip'+(r.id===rarity?' sel':'');
+  d.innerHTML=`<span class="sym">${r.sym}</span> ${r.label}`;
+  d.onclick=()=>{rarity=r.id;[...rc.children].forEach(c=>c.classList.remove('sel'));d.classList.add('sel');render();};
+  rc.appendChild(d);
+});
+
+/* 3D interaction */
+const card=document.getElementById('card');
+const scene=document.getElementById('scene');
+let dragging=false;
+function pointTo(clientX,clientY){
+  const r=scene.getBoundingClientRect();
+  const px=Math.max(0,Math.min(1,(clientX-r.left)/r.width));
+  const py=Math.max(0,Math.min(1,(clientY-r.top)/r.height));
+  const ry=(px-0.5)*46 + (flipped?180:0);
+  const rx=-(py-0.5)*46;
+  card.style.setProperty('--ry',ry+'deg');
+  card.style.setProperty('--rx',rx+'deg');
+  card.style.setProperty('--mx',(px*100)+'%');
+  card.style.setProperty('--my',(py*100)+'%');
+  card.style.setProperty('--glare',0.55);
+}
+scene.addEventListener('pointerdown',e=>{dragging=true;scene.setPointerCapture(e.pointerId);pointTo(e.clientX,e.clientY);});
+scene.addEventListener('pointermove',e=>{if(dragging)pointTo(e.clientX,e.clientY);});
+scene.addEventListener('pointerup',()=>{dragging=false;resetView();});
+scene.addEventListener('pointercancel',()=>{dragging=false;resetView();});
+// gentle hover tilt on desktop (non-drag)
+scene.addEventListener('mousemove',e=>{if(!dragging && matchMedia('(hover:hover)').matches)pointTo(e.clientX,e.clientY);});
+scene.addEventListener('mouseleave',()=>{if(!dragging)resetView();});
+
+function resetView(){
+  card.style.setProperty('--rx','8deg');
+  card.style.setProperty('--ry',(flipped?194:-14)+'deg');
+  card.style.setProperty('--glare',0.22);
+}
+function flip(){flipped=!flipped;resetView();}
+window.resetView=resetView;window.flip=flip;window.render=render;window.clearLogo=clearLogo;
+
+render();resetView();
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>{fitName();fitEvent();});}
+</script>
+</body>
+</html>
