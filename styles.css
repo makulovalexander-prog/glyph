@@ -57,7 +57,7 @@ body{
   transform:rotateX(var(--rx,8deg)) rotateY(var(--ry,-14deg));
   transition:transform .12s ease-out, --mx .18s ease-out, --my .18s ease-out, --glare .18s ease-out;
   cursor:grab;touch-action:none;
-  will-change:transform;
+  /* will-change is toggled on by JS only while interacting (see attachInteraction) */
 }
 .card:active{cursor:grabbing;}
 .face{

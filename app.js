@@ -234,11 +234,20 @@ function renderSealInto(host, d, withShimmer){
 
 /* ===== 3D interaction — attached per interactive card (editor + focus only) ===== */
 function attachInteraction(cardEl, sceneEl){
-  let flipped=false, dragging=false;
+  let flipped=false, dragging=false, hovering=false;
+  let rect=null, lastX=0, lastY=0, rafId=0;
   const clamp01=v=>Math.max(0,Math.min(1,v));
-  function pointTo(cx,cy){
-    const r=sceneEl.getBoundingClientRect();
-    const px=clamp01((cx-r.left)/r.width), py=clamp01((cy-r.top)/r.height);
+  const canHover=()=>matchMedia('(hover:hover)').matches;
+
+  function refreshRect(){ rect=sceneEl.getBoundingClientRect(); }   // cached; not read per move
+  function updateWillChange(){ cardEl.style.willChange=(dragging||hovering)?'transform':'auto'; }
+
+  // coalesce pointer events → apply the latest position once per animation frame
+  function queue(x,y){ lastX=x; lastY=y; if(!rafId) rafId=requestAnimationFrame(apply); }
+  function apply(){
+    rafId=0;
+    if(!rect) refreshRect();
+    const px=clamp01((lastX-rect.left)/rect.width), py=clamp01((lastY-rect.top)/rect.height);
     cardEl.style.setProperty('--ry',((px-0.5)*46+(flipped?180:0))+'deg');
     cardEl.style.setProperty('--rx',(-(py-0.5)*46)+'deg');
     cardEl.style.setProperty('--mx',(px*100)+'%');
@@ -246,20 +255,47 @@ function attachInteraction(cardEl, sceneEl){
     cardEl.style.setProperty('--glare',0.55);
   }
   function reset(){
+    if(rafId){ cancelAnimationFrame(rafId); rafId=0; }
     cardEl.style.setProperty('--rx','8deg');
     cardEl.style.setProperty('--ry',(flipped?194:-14)+'deg');
     cardEl.style.setProperty('--mx','50%');     // recenter the light; eases back via the @property transition
     cardEl.style.setProperty('--my','50%');
     cardEl.style.setProperty('--glare',0.22);
   }
-  sceneEl.addEventListener('pointerdown',e=>{dragging=true;sceneEl.setPointerCapture(e.pointerId);pointTo(e.clientX,e.clientY);});
-  sceneEl.addEventListener('pointermove',e=>{if(dragging)pointTo(e.clientX,e.clientY);});
-  sceneEl.addEventListener('pointerup',()=>{dragging=false;reset();});
-  sceneEl.addEventListener('pointercancel',()=>{dragging=false;reset();});
-  sceneEl.addEventListener('mousemove',e=>{if(!dragging && matchMedia('(hover:hover)').matches)pointTo(e.clientX,e.clientY);});
-  sceneEl.addEventListener('mouseleave',()=>{if(!dragging)reset();});
-  reset();
-  return {flip(){flipped=!flipped;reset();}, reset};
+
+  const onDown=e=>{ dragging=true; refreshRect(); updateWillChange(); sceneEl.setPointerCapture(e.pointerId); queue(e.clientX,e.clientY); };
+  const onMove=e=>{ if(dragging||hovering) queue(e.clientX,e.clientY); };
+  const onUp=()=>{ if(!dragging)return; dragging=false; updateWillChange(); reset(); };
+  const onCancel=()=>{ dragging=false; updateWillChange(); reset(); };
+  const onEnter=()=>{ if(!dragging && canHover()){ hovering=true; refreshRect(); updateWillChange(); } };
+  const onLeave=()=>{ hovering=false; updateWillChange(); if(!dragging) reset(); };
+  const onViewportChange=()=>{ if(dragging||hovering) refreshRect(); };  // re-cache instead of per-move
+
+  sceneEl.addEventListener('pointerdown',onDown);
+  sceneEl.addEventListener('pointermove',onMove);
+  sceneEl.addEventListener('pointerup',onUp);
+  sceneEl.addEventListener('pointercancel',onCancel);
+  sceneEl.addEventListener('pointerenter',onEnter);
+  sceneEl.addEventListener('pointerleave',onLeave);
+  addEventListener('resize',onViewportChange);
+  addEventListener('scroll',onViewportChange,{passive:true});
+
+  reset(); updateWillChange();
+  return {
+    flip(){ flipped=!flipped; reset(); },
+    reset,
+    destroy(){
+      if(rafId) cancelAnimationFrame(rafId);
+      sceneEl.removeEventListener('pointerdown',onDown);
+      sceneEl.removeEventListener('pointermove',onMove);
+      sceneEl.removeEventListener('pointerup',onUp);
+      sceneEl.removeEventListener('pointercancel',onCancel);
+      sceneEl.removeEventListener('pointerenter',onEnter);
+      sceneEl.removeEventListener('pointerleave',onLeave);
+      removeEventListener('resize',onViewportChange);
+      removeEventListener('scroll',onViewportChange);
+    }
+  };
 }
 
 /* ===== logo processing: resize to ≤400px longest edge + re-encode ===== */
@@ -506,6 +542,7 @@ function updateCount(){
 function refreshStoreUI(){ updateCount(); if(currentView==='gallery') renderGallery(); }
 
 /* ===== gallery (lightweight static thumbnails) ===== */
+let galleryObserver=null;
 function renderGallery(){
   updateCount();
   const grid=document.getElementById('galleryGrid');
@@ -513,10 +550,26 @@ function renderGallery(){
   const store=loadStore().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   grid.innerHTML='';
   empty.hidden = store.length>0;
-  const pending=[];
-  store.forEach(d=>{ const {tile,card}=makeTile(d); grid.appendChild(tile); pending.push([card,d]); });
-  // paint after they're in the (now visible) DOM so auto-fit can measure
-  pending.forEach(([card,d])=>paintCard(card,d,{holo:false}));
+  if(galleryObserver){ galleryObserver.disconnect(); galleryObserver=null; }
+
+  // lazily paint a thumbnail (seal generation + auto-fit) only as it nears the viewport
+  const lazy = 'IntersectionObserver' in window;
+  if(lazy){
+    galleryObserver=new IntersectionObserver((entries,obs)=>{
+      entries.forEach(en=>{
+        if(!en.isIntersecting) return;
+        const t=en.target;
+        if(t._design){ paintCard(t._card, t._design, {holo:false}); t._design=null; }  // paint once
+        obs.unobserve(t);
+      });
+    }, {rootMargin:'300px 0px', threshold:0.01});
+  }
+  store.forEach(d=>{
+    const {tile,card}=makeTile(d);                 // structure + labels show immediately
+    grid.appendChild(tile);
+    if(lazy){ tile._card=card; tile._design=d; galleryObserver.observe(tile); }
+    else paintCard(card,d,{holo:false});           // fallback: paint all up front
+  });
 }
 function makeTile(d){
   const tile=document.createElement('div');
@@ -577,9 +630,11 @@ function openFocus(id){
   document.getElementById('focusName').textContent=labelFor(d);
   document.getElementById('focusOverlay').hidden=false;   // visible BEFORE paint so fit measures
   paintCard(card, d, {holo:true});
+  if(focusCtl&&focusCtl.destroy) focusCtl.destroy();      // tear down any previous instance first
   focusCtl=attachInteraction(card, scene);
 }
 function closeFocus(){
+  if(focusCtl&&focusCtl.destroy) focusCtl.destroy();      // remove listeners + cancel rAF
   document.getElementById('focusOverlay').hidden=true;
   document.getElementById('focusScene').innerHTML='';     // unmount → drop the holo layers
   focusCtl=null; focusId=null;
