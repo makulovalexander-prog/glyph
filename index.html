@@ -66,6 +66,7 @@
           <div class="lib-actions">
             <button class="sbtn primary" onclick="saveCurrent()">Save</button>
             <button class="sbtn" onclick="newDesign()">New</button>
+            <button class="sbtn" onclick="exportCurrent()">Export</button>
           </div>
         </div>
       </div>
@@ -83,6 +84,14 @@
 
   <!-- ===================== GALLERY ===================== -->
   <section id="galleryView" class="view" hidden>
+    <div class="gallery-toolbar">
+      <span class="gtb-hint">Back up your collection or move it between devices.</span>
+      <div class="gtb-actions">
+        <button class="sbtn" id="importBtn">Import</button>
+        <button class="sbtn" id="exportAllBtn">Export collection</button>
+      </div>
+    </div>
+    <input type="file" id="importInput" accept="application/json,.json" hidden/>
     <div class="gallery-empty" id="galleryEmpty" hidden>No venues saved yet — build one in the Editor and hit Save.</div>
     <div class="gallery-grid" id="galleryGrid"></div>
   </section>

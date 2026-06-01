@@ -345,6 +345,118 @@ function syncChipsFromState(){
   [...rc.children].forEach(c=>c.classList.toggle('sel',c.dataset.id===currentDesign.rarity));
 }
 
+/* ===== import / export (back up + move collections between devices) ===== */
+function readFileAsText(file){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(file);});
+}
+function dateStamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'design';}
+function downloadJSON(filename,obj){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function envelope(designs){return {type:'glyph.collection',version:1,exportedAt:Date.now(),designs};}
+
+function exportCollection(){
+  const designs=loadStore();
+  if(!designs.length){ toast('No saved venues to export.'); return; }
+  downloadJSON('glyph-collection-'+dateStamp()+'.json', envelope(designs));
+  toast('Exported '+designs.length+' venue'+(designs.length===1?'':'s'));
+}
+function exportCurrent(){
+  downloadJSON('glyph-'+slug(labelFor(currentDesign))+'.json', envelope([currentDesign]));
+  toast(labelFor(currentDesign)+' exported');
+}
+
+/* normalise + validate one design from untrusted JSON (forgiving but type-safe) */
+function asStr(v){return typeof v==='string'?v:(v==null?'':String(v));}
+function coerceDesign(raw){
+  if(!raw || typeof raw!=='object' || Array.isArray(raw)) return null;
+  return Object.assign(createDesign(), {
+    id:          (typeof raw.id==='string' && raw.id) ? raw.id : genId(),
+    venueName:   asStr(raw.venueName),
+    logoDataUrl: (typeof raw.logoDataUrl==='string' && raw.logoDataUrl.slice(0,5)==='data:') ? raw.logoDataUrl : null,
+    eventLine:   asStr(raw.eventLine),
+    location:    asStr(raw.location),
+    date:        asStr(raw.date),
+    edition:     asStr(raw.edition),
+    tagline:     asStr(raw.tagline),
+    palette:     PAL[raw.palette] ? raw.palette : 'Onyx',
+    rarity:      RARITIES.some(r=>r.id===raw.rarity) ? raw.rarity : 'common',
+    updatedAt:   typeof raw.updatedAt==='number' ? raw.updatedAt : Date.now()
+  });
+}
+/* accept an envelope {designs:[…]}, a bare array […], or a single design object */
+function extractDesigns(parsed){
+  let arr;
+  if(Array.isArray(parsed)) arr=parsed;
+  else if(parsed && Array.isArray(parsed.designs)) arr=parsed.designs;
+  else if(parsed && typeof parsed==='object' && ('venueName' in parsed || 'palette' in parsed || 'id' in parsed)) arr=[parsed];
+  else return null;                                  // unrecognised shape
+  return arr.map(coerceDesign).filter(Boolean);      // [] = recognised but nothing valid
+}
+
+async function importFile(file){
+  let text;
+  try{ text=await readFileAsText(file); }
+  catch(e){ toast('Could not read that file.'); return; }
+  let parsed;
+  try{ parsed=JSON.parse(text); }
+  catch(e){ toast('That file is not valid JSON.'); return; }
+  const incoming=extractDesigns(parsed);
+  if(incoming===null){ toast('Unrecognised file — not a Glyph export.'); return; }
+  if(!incoming.length){ toast('No valid designs found in that file.'); return; }
+
+  const store=loadStore();
+  const ids=new Set(store.map(d=>d.id));
+  const conflicts=incoming.filter(d=>ids.has(d.id));
+  let mode='add';
+  if(conflicts.length){
+    const choice=await dialog(
+      conflicts.length+' of these '+(conflicts.length===1?'designs already exists':'designs already exist')+' here. Overwrite them, or keep both copies?',
+      [{label:'Overwrite',value:'overwrite',primary:true},{label:'Keep both',value:'copy'},{label:'Cancel',value:null}]
+    );
+    if(choice==null){ toast('Import cancelled.'); return; }
+    mode=choice;
+  }
+  let added=0,overwritten=0,copied=0;
+  incoming.forEach(d=>{
+    const idx=store.findIndex(s=>s.id===d.id);
+    if(idx<0){ store.push(d); added++; }
+    else if(mode==='overwrite'){ store[idx]=d; overwritten++; }
+    else { store.push(Object.assign({},d,{id:genId(),updatedAt:Date.now()})); copied++; }
+  });
+  if(writeStore(store)){
+    refreshStoreUI();
+    const parts=[]; if(added)parts.push(added+' added'); if(overwritten)parts.push(overwritten+' overwritten'); if(copied)parts.push(copied+' copied');
+    toast('Imported — '+(parts.join(', ')||'nothing'));
+  }
+}
+
+/* generic modal → resolves to the chosen button value (or null on dismiss) */
+function dialog(message, buttons){
+  return new Promise(resolve=>{
+    const ov=document.createElement('div'); ov.className='dialog-overlay';
+    const box=document.createElement('div'); box.className='dialog';
+    const msg=document.createElement('div'); msg.className='dialog-msg'; msg.textContent=message;
+    const row=document.createElement('div'); row.className='dialog-actions';
+    let done=false;
+    const finish=v=>{ if(done)return; done=true; document.removeEventListener('keydown',onKey); ov.remove(); resolve(v); };
+    function onKey(e){ if(e.key==='Escape') finish(null); }
+    buttons.forEach(b=>{
+      const btn=document.createElement('button'); btn.className='sbtn'+(b.primary?' primary':''); btn.textContent=b.label;
+      btn.addEventListener('click',()=>finish(b.value));
+      row.appendChild(btn);
+    });
+    box.append(msg,row); ov.appendChild(box); document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{ if(e.target===ov) finish(null); });
+    document.addEventListener('keydown',onKey);
+  });
+}
+
 /* ===== views & header count ===== */
 let currentView='editor';
 function setView(name){
@@ -452,6 +564,7 @@ function clearLogo(){logoInput.value='';logoStatus.style.display='none';update({
 
 /* expose handlers used by inline HTML */
 window.clearLogo=clearLogo;window.saveCurrent=saveCurrent;window.newDesign=newDesign;
+window.exportCurrent=exportCurrent;
 window.flip=()=>editorCtl&&editorCtl.flip();
 window.resetView=()=>editorCtl&&editorCtl.reset();
 
@@ -513,6 +626,11 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
   document.getElementById('focusOpen').addEventListener('click',()=>{ if(focusId){const id=focusId;closeFocus();loadDesign(id);} });
   document.getElementById('focusOverlay').addEventListener('click',e=>{ if(e.target.id==='focusOverlay') closeFocus(); });
   document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !document.getElementById('focusOverlay').hidden) closeFocus(); });
+
+  // import / export collection
+  document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importInput').click());
+  document.getElementById('importInput').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) importFile(f); e.target.value=''; });
+  document.getElementById('exportAllBtn').addEventListener('click',exportCollection);
 
   // initial paint
   syncInputsFromState();
