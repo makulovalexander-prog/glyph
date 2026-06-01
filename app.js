@@ -213,20 +213,22 @@ function render(){
 /* text inputs: id → design field */
 const FIELD_MAP={venue:'venueName',event:'eventLine',loc:'location',date:'date',edition:'edition',tag:'tagline'};
 Object.entries(FIELD_MAP).forEach(([id,key])=>{
-  const el=document.getElementById(id);
-  el.value=currentDesign[key]??'';                 // seed the input from state once
-  el.addEventListener('input',()=>update({[key]:el.value}));
+  document.getElementById(id).addEventListener('input',e=>update({[key]:e.target.value}));
 });
 
 /* logo upload */
 const logoInput=document.getElementById('logoInput');
 const logoStatus=document.getElementById('logoStatus');
 const logoName=document.getElementById('logoName');
-logoInput.onchange=function(e){
+logoInput.onchange=async function(e){
   const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{logoStatus.style.display='flex';logoName.textContent=f.name;update({logoDataUrl:ev.target.result});};
-  r.readAsDataURL(f);
+  try{
+    const dataUrl=await processLogo(f);   // resize ≤400px longest edge + re-encode (WebP→PNG)
+    logoStatus.style.display='flex';logoName.textContent=f.name;
+    update({logoDataUrl:dataUrl});
+  }catch(err){
+    toast('Could not process that image.');
+  }
 };
 function clearLogo(){logoInput.value='';logoStatus.style.display='none';update({logoDataUrl:null});}
 
@@ -236,8 +238,8 @@ Object.keys(PAL).forEach(name=>{
   const p=PAL[name];const d=document.createElement('div');
   d.className='chip'+(name===currentDesign.palette?' sel':'');
   d.style.background=p.chip;d.style.color=p.ci;d.style.border='0.5px solid '+p.line+'66';
-  d.textContent=name;
-  d.onclick=()=>{[...tc.children].forEach(c=>c.classList.remove('sel'));d.classList.add('sel');update({palette:name});};
+  d.textContent=name;d.dataset.name=name;
+  d.onclick=()=>{update({palette:name});syncChipsFromState();};
   tc.appendChild(d);
 });
 
@@ -246,10 +248,131 @@ const rc=document.getElementById('rarities');
 RARITIES.forEach(r=>{
   const d=document.createElement('div');
   d.className='rchip'+(r.id===currentDesign.rarity?' sel':'');
+  d.dataset.id=r.id;
   d.innerHTML=`<span class="sym">${r.sym}</span> ${r.label}`;
-  d.onclick=()=>{[...rc.children].forEach(c=>c.classList.remove('sel'));d.classList.add('sel');update({rarity:r.id});};
+  d.onclick=()=>{update({rarity:r.id});syncChipsFromState();};
   rc.appendChild(d);
 });
+
+/* ===== logo processing: resize to ≤400px longest edge + re-encode ===== */
+function readFileAsDataURL(file){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+}
+function loadImage(src){
+  return new Promise((res,rej)=>{const img=new Image();img.onload=()=>res(img);img.onerror=rej;img.src=src;});
+}
+async function processLogo(file){
+  const img=await loadImage(await readFileAsDataURL(file));
+  const max=400;
+  let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+  if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s));}
+  const canvas=document.createElement('canvas');
+  canvas.width=w;canvas.height=h;
+  canvas.getContext('2d').drawImage(img,0,0,w,h);          // preserves alpha
+  let out=canvas.toDataURL('image/webp',0.9);              // WebP if supported…
+  if(out.slice(0,15)!=='data:image/webp') out=canvas.toDataURL('image/png'); // …else PNG
+  return out;
+}
+
+/* ===== persistence: saved-designs library (localStorage) ===== */
+const STORE_KEY='glyph.designs.v1';
+
+function loadStore(){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    const arr=raw?JSON.parse(raw):[];
+    return Array.isArray(arr)?arr:[];
+  }catch(e){ return []; }                                   // unavailable/corrupt → empty
+}
+function writeStore(arr){
+  try{
+    localStorage.setItem(STORE_KEY,JSON.stringify(arr));
+    return true;
+  }catch(e){
+    const quota=e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);
+    toast(quota?'Storage full — delete a saved design and try again.':'Could not save — storage unavailable.');
+    return false;
+  }
+}
+function labelFor(d){return (d&&d.venueName&&d.venueName.trim())?d.venueName.trim():'Untitled';}
+function fmtDate(ts){
+  if(!ts)return '';
+  const d=new Date(ts);
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+}
+
+/* upsert the current design by id */
+function saveCurrent(){
+  const store=loadStore();
+  currentDesign.updatedAt=Date.now();
+  const snap=Object.assign({},currentDesign);
+  const i=store.findIndex(d=>d.id===snap.id);
+  if(i>=0) store[i]=snap; else store.push(snap);
+  if(writeStore(store)){ toast(labelFor(snap)+' saved'); renderLibrary(); }
+}
+/* restore a stored design into currentDesign + the editor */
+function loadDesign(id){
+  const found=loadStore().find(d=>d.id===id);
+  if(!found){ toast('That design is no longer there.'); renderLibrary(); return; }
+  currentDesign=Object.assign(createDesign(),found);        // fill any missing fields, keep saved id
+  syncInputsFromState(); syncChipsFromState(); render(); renderLibrary();
+  toast(labelFor(currentDesign)+' loaded');
+}
+/* clear to a blank design with a fresh id */
+function newDesign(){
+  currentDesign=createDesign({venueName:'',eventLine:'',location:'',date:'',edition:'',tagline:'',logoDataUrl:null,palette:'Onyx',rarity:'common'});
+  syncInputsFromState(); syncChipsFromState(); render(); renderLibrary();
+  toast('New blank design');
+}
+function deleteDesign(id){
+  const store=loadStore().filter(d=>d.id!==id);
+  if(writeStore(store)){ renderLibrary(); toast('Deleted'); }
+}
+
+/* push state → editor inputs (used by load / new) */
+function syncInputsFromState(){
+  Object.entries(FIELD_MAP).forEach(([id,key])=>{document.getElementById(id).value=currentDesign[key]??'';});
+  if(currentDesign.logoDataUrl){logoStatus.style.display='flex';logoName.textContent='Logo attached';}
+  else{logoStatus.style.display='none';logoInput.value='';}
+}
+/* push state → palette/rarity chip selection */
+function syncChipsFromState(){
+  [...tc.children].forEach(c=>c.classList.toggle('sel',c.dataset.name===currentDesign.palette));
+  [...rc.children].forEach(c=>c.classList.toggle('sel',c.dataset.id===currentDesign.rarity));
+}
+
+/* render the saved-designs list */
+function renderLibrary(){
+  const list=document.getElementById('designList');
+  const store=loadStore().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  list.innerHTML='';
+  if(!store.length){
+    const e=document.createElement('div');e.className='lib-empty';e.textContent='No saved designs yet.';
+    list.appendChild(e);return;
+  }
+  store.forEach(d=>{
+    const item=document.createElement('div');
+    item.className='design-item'+(d.id===currentDesign.id?' active':'');
+    const meta=document.createElement('span');meta.className='meta';
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=labelFor(d);
+    const dt=document.createElement('span');dt.className='dt';dt.textContent=fmtDate(d.updatedAt);
+    meta.append(nm,dt);
+    const del=document.createElement('button');del.className='del';del.title='Delete';del.textContent='✕';
+    item.append(meta,del);
+    item.addEventListener('click',()=>loadDesign(d.id));
+    del.addEventListener('click',e=>{e.stopPropagation();deleteDesign(d.id);});
+    list.appendChild(item);
+  });
+}
+
+/* small transient message */
+let toastTimer=null;
+function toast(msg){
+  let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el);}
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
 
 /* ===== 3D interaction (view-only, independent of the design) ===== */
 const card=document.getElementById('card');
@@ -282,7 +405,11 @@ function resetView(){
 }
 function flip(){flipped=!flipped;resetView();}
 window.resetView=resetView;window.flip=flip;window.clearLogo=clearLogo;
+window.saveCurrent=saveCurrent;window.newDesign=newDesign;
 
 /* ===== boot ===== */
+syncInputsFromState();
+syncChipsFromState();
+renderLibrary();
 render();resetView();
 if(document.fonts&&document.fonts.ready){document.fonts.ready.then(()=>{fitName();fitEvent();});}

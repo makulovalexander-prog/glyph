@@ -177,3 +177,21 @@ body{
 .sbtn{background:var(--panel);border:0.5px solid var(--line);border-radius:999px;padding:9px 18px;color:var(--ink);font-size:11px;letter-spacing:1.5px;cursor:pointer;font-family:inherit;text-transform:uppercase;transition:all .15s;}
 .sbtn:hover{border-color:var(--accent);}
 .sbtn.primary{background:var(--accent);color:#15130E;border-color:var(--accent);font-weight:600;}
+
+/* ---- saved-designs library ---- */
+.lib-actions{display:flex;gap:8px;margin-bottom:10px;}
+.lib-actions .sbtn{flex:1;padding:9px 0;text-align:center;}
+.design-list{display:flex;flex-direction:column;gap:6px;max-height:188px;overflow:auto;}
+.lib-empty{font-size:11px;color:var(--soft);padding:8px 2px;letter-spacing:.3px;}
+.design-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:0.5px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer;transition:border-color .15s;}
+.design-item:hover{border-color:var(--accent);}
+.design-item.active{border-color:var(--accent);box-shadow:inset 0 0 0 0.5px var(--accent);}
+.design-item .meta{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.design-item .nm{font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.design-item .dt{font-size:10px;color:var(--soft);letter-spacing:.3px;}
+.design-item .del{flex:none;background:transparent;border:0.5px solid var(--line);border-radius:6px;width:22px;height:22px;color:var(--soft);cursor:pointer;font-size:11px;line-height:1;font-family:inherit;transition:all .15s;}
+.design-item .del:hover{border-color:#b4574f;color:#e0857d;}
+
+/* ---- toast ---- */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--panel);border:0.5px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:999px;font-size:12px;letter-spacing:.3px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;box-shadow:0 12px 32px rgba(0,0,0,.55);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
