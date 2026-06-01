@@ -3,121 +3,102 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Glyph · Tessera Studio</title>
+<title>Glyph Studio · Tessera</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div class="shell">
-  <div class="masthead">
-    <div class="kicker">Glyph · Tessera Studio</div>
-    <div class="title">3D Holographic Tessera</div>
-    <div class="subtitle">Drag the card to examine it under the light. Common Tessera are matte; rare ones catch the light — holographic, reverse-holo, prismatic, gold. The venue's identity lives on the front; Glyph lives on the back, like any collectible card.</div>
-  </div>
-
-  <div class="grid">
-    <div class="controls">
-      <div class="field">
-        <label>Venue logo (transparent PNG ideal)</label>
-        <label class="logo-drop">
-          <input type="file" id="logoInput" accept="image/*"/>
-          <div class="lt">Tap to upload the venue's logo</div>
-          <div class="ls">or leave empty for an elegant wordmark</div>
-        </label>
-        <div class="logo-status" id="logoStatus">
-          <span id="logoName"></span>
-          <button onclick="clearLogo()">Remove</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Venue name</label>
-        <input id="venue"/>
-      </div>
-      <div class="field">
-        <label>Event</label>
-        <input id="event"/>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Location</label><input id="loc"/></div>
-        <div class="field"><label>Date</label><input id="date"/></div>
-      </div>
-      <div class="row2">
-        <div class="field"><label>Edition</label><input id="edition"/></div>
-        <div class="field"><label>Tagline</label><input id="tag"/></div>
-      </div>
-      <div class="field">
-        <label>Frame palette</label>
-        <div class="chips" id="themes"></div>
-      </div>
-      <div class="field">
-        <label>Rarity</label>
-        <div class="rarity-chips" id="rarities"></div>
-      </div>
-      <div class="field">
-        <label>Designs</label>
-        <div class="lib-actions">
-          <button class="sbtn primary" onclick="saveCurrent()">Save</button>
-          <button class="sbtn" onclick="newDesign()">New</button>
-        </div>
-        <div class="design-list" id="designList"></div>
-      </div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name">Glyph Studio</span>
+      <span class="brand-count" id="venueCount">0 venues</span>
     </div>
+    <nav class="tabs">
+      <button class="tab active" data-view="editor">Editor</button>
+      <button class="tab" data-view="gallery">Gallery</button>
+    </nav>
+  </header>
 
-    <div class="stage">
-      <div class="stage-hint">Drag to rotate · move across to shift the light</div>
-      <div class="scene" id="scene">
-        <div class="card" id="card" data-rarity="holo">
-          <!-- FRONT -->
-          <div class="face front" id="front">
-            <div class="f-tex"></div>
-            <div class="f-matte"></div>
-            <div class="f-frame"></div>
-            <div class="f-frame2"></div>
-            <div class="f-top">
-              <span class="f-presence">Tessera</span>
-              <span class="f-edition" id="o-edition">No. 247</span>
-            </div>
-            <div class="f-rule"></div>
-            <div class="f-hero">
-              <img class="f-logo" id="o-logo" style="display:none" alt=""/>
-              <div class="f-namewrap">
-                <div class="f-name" id="o-name">HANUMAN</div>
-                <div class="f-event" id="o-event">TASTING MENU N° 7</div>
-              </div>
-            </div>
-            <div class="f-loc" id="o-loc">KREUZBERG · BERLIN</div>
-            <div class="f-rule"></div>
-            <div class="f-seal" id="o-seal"></div>
-            <div class="f-date" id="o-date">28 MAY 2026</div>
-            <div class="f-tag" id="o-tag">Not a Trend; A Tradition</div>
-            <div class="f-rarity" id="o-rsym">◆</div>
-            <!-- holo overlays -->
-            <div class="holo holo-rainbow"></div>
-            <div class="holo holo-prism"></div>
-            <div class="holo holo-gold"></div>
-            <div class="holo holo-sparkle"></div>
-            <div class="holo holo-glare"></div>
+  <!-- ===================== EDITOR ===================== -->
+  <section id="editorView" class="view">
+    <div class="grid">
+      <div class="controls">
+        <div class="field">
+          <label>Venue logo (transparent PNG ideal)</label>
+          <label class="logo-drop">
+            <input type="file" id="logoInput" accept="image/*"/>
+            <div class="lt">Tap to upload the venue's logo</div>
+            <div class="ls">or leave empty for an elegant wordmark</div>
+          </label>
+          <div class="logo-status" id="logoStatus">
+            <span id="logoName"></span>
+            <button onclick="clearLogo()">Remove</button>
           </div>
-          <!-- BACK -->
-          <div class="face back">
-            <div class="b-guilloche"></div>
-            <div class="b-frame"></div>
-            <div class="b-emblem"><span>✦</span></div>
-            <div class="b-word">GLYPH</div>
-            <div class="b-sub">Verified Presence</div>
-            <div class="b-foot">Collect the real world · Berlin</div>
-            <div class="holo holo-rainbow"></div>
-            <div class="holo holo-sparkle"></div>
-            <div class="holo holo-glare"></div>
+        </div>
+        <div class="field">
+          <label>Venue name</label>
+          <input id="venue"/>
+        </div>
+        <div class="field">
+          <label>Event</label>
+          <input id="event"/>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Location</label><input id="loc"/></div>
+          <div class="field"><label>Date</label><input id="date"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Edition</label><input id="edition"/></div>
+          <div class="field"><label>Tagline</label><input id="tag"/></div>
+        </div>
+        <div class="field">
+          <label>Frame palette</label>
+          <div class="chips" id="themes"></div>
+        </div>
+        <div class="field">
+          <label>Rarity</label>
+          <div class="rarity-chips" id="rarities"></div>
+        </div>
+        <div class="field">
+          <label>Designs</label>
+          <div class="lib-actions">
+            <button class="sbtn primary" onclick="saveCurrent()">Save</button>
+            <button class="sbtn" onclick="newDesign()">New</button>
           </div>
         </div>
       </div>
-      <div class="stage-controls">
-        <button class="sbtn primary" onclick="flip()">Flip card</button>
-        <button class="sbtn" onclick="resetView()">Reset</button>
+
+      <div class="stage">
+        <div class="stage-hint">Drag to rotate · move across to shift the light</div>
+        <div class="scene" id="scene"></div>
+        <div class="stage-controls">
+          <button class="sbtn primary" onclick="flip()">Flip card</button>
+          <button class="sbtn" onclick="resetView()">Reset</button>
+        </div>
       </div>
     </div>
+  </section>
+
+  <!-- ===================== GALLERY ===================== -->
+  <section id="galleryView" class="view" hidden>
+    <div class="gallery-empty" id="galleryEmpty" hidden>No venues saved yet — build one in the Editor and hit Save.</div>
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </section>
+</div>
+
+<!-- ===================== FOCUS (single-card 3D) ===================== -->
+<div class="focus-overlay" id="focusOverlay" hidden>
+  <button class="focus-close" id="focusClose" aria-label="Close">✕</button>
+  <div class="focus-scene" id="focusScene"></div>
+  <div class="focus-meta">
+    <div class="focus-name" id="focusName"></div>
+    <div class="focus-actions">
+      <button class="sbtn" id="focusFlip">Flip</button>
+      <button class="sbtn primary" id="focusOpen">Open in editor</button>
+    </div>
+    <div class="focus-hint">Drag to rotate · move across to shift the light</div>
   </div>
 </div>
 
