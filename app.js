@@ -248,6 +248,8 @@ function attachInteraction(cardEl, sceneEl){
   function reset(){
     cardEl.style.setProperty('--rx','8deg');
     cardEl.style.setProperty('--ry',(flipped?194:-14)+'deg');
+    cardEl.style.setProperty('--mx','50%');     // recenter the light; eases back via the @property transition
+    cardEl.style.setProperty('--my','50%');
     cardEl.style.setProperty('--glare',0.22);
   }
   sceneEl.addEventListener('pointerdown',e=>{dragging=true;sceneEl.setPointerCapture(e.pointerId);pointTo(e.clientX,e.clientY);});

@@ -4,6 +4,10 @@
   /* palette vars, overwritten by JS */
   --p-bg1:#16161A; --p-bg2:#0A0A0C; --p-ink:#ECEAE3; --p-soft:#86847C; --p-line:#C9A876;
 }
+/* register the light-driving props so the browser can interpolate them (smooth motion + eased reset) */
+@property --mx{syntax:'<percentage>';inherits:true;initial-value:50%;}
+@property --my{syntax:'<percentage>';inherits:true;initial-value:50%;}
+@property --glare{syntax:'<number>';inherits:true;initial-value:0.22;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{
   font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);
@@ -51,7 +55,7 @@ body{
   position:relative;width:300px;height:420px;
   transform-style:preserve-3d;
   transform:rotateX(var(--rx,8deg)) rotateY(var(--ry,-14deg));
-  transition:transform .12s ease-out;
+  transition:transform .12s ease-out, --mx .18s ease-out, --my .18s ease-out, --glare .18s ease-out;
   cursor:grab;touch-action:none;
   will-change:transform;
 }
@@ -86,9 +90,9 @@ body{
 .seal-shimmer{
   position:absolute;inset:0;pointer-events:none;border-radius:50%;
   mix-blend-mode:color-dodge;
-  background:repeating-linear-gradient(115deg,#6b4e1e 0%,#f6d889 12%,#b8893a 24%,#ffe9a8 36%,#8a6526 48%,#f6d889 60%);
+  background:repeating-linear-gradient(115deg,#6b4e1e 0%,#f6d889 10%,#b8893a 20%,#ffe9a8 30%,#8a6526 40%,#6b4e1e 50%);
   background-size:240% 240%;
-  background-position:calc(var(--mx,50%)*1.4) calc(var(--my,50%)*1.4);
+  background-position:calc(50% + (var(--mx,50%) - 50%)*0.8) calc(50% + (var(--my,50%) - 50%)*0.8);
   filter:brightness(.85) contrast(1.4) saturate(1.1);
   opacity:calc(var(--glare,.22) * 0.8);
   -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
@@ -121,25 +125,30 @@ body{
 /* ---------- HOLO LAYERS ---------- */
 .holo{position:absolute;inset:0;border-radius:18px;pointer-events:none;mix-blend-mode:color-dodge;opacity:0;transition:opacity .2s;}
 .holo-rainbow{
+  /* clean loop: first stop = last stop, so the repeated gradient has no colour break */
   background:repeating-linear-gradient(110deg,
-    #ff5f6d 0%, #ffc371 12%, #47e6b1 24%, #4aa3ff 36%, #a96bff 48%, #ff5f6d 60%);
+    #ff5f6d 0%, #ffc371 10%, #47e6b1 20%, #4aa3ff 30%, #a96bff 40%, #ff5f6d 50%);
   background-size:300% 300%;
-  background-position:calc(var(--mx,50%)*1.4) calc(var(--my,50%)*1.4);
+  /* centred + bounded slide: 0.8 keeps the visible window inside one 300% tile, never
+     crossing the repeat boundary → seamless in every tilt direction */
+  background-position:calc(50% + (var(--mx,50%) - 50%)*0.8) calc(50% + (var(--my,50%) - 50%)*0.8);
   filter:brightness(.85) contrast(1.5) saturate(1.3);
 }
 .holo-prism{
+  /* % bands (not px) so they scale with the tile; the slide stays inside one tile */
   background:repeating-linear-gradient(75deg,
-    rgba(255,0,128,.9) 0 6px, rgba(255,200,0,.9) 6px 12px, rgba(0,230,180,.9) 12px 18px,
-    rgba(0,150,255,.9) 18px 24px, rgba(170,0,255,.9) 24px 30px);
-  background-size:200% 200%;
-  background-position:calc(var(--mx,50%)*2) calc(var(--my,50%)*2);
+    rgba(255,0,128,.9) 0 1%, rgba(255,200,0,.9) 1% 2%, rgba(0,230,180,.9) 2% 3%,
+    rgba(0,150,255,.9) 3% 4%, rgba(170,0,255,.9) 4% 5%);
+  background-size:300% 300%;
+  background-position:calc(50% + (var(--mx,50%) - 50%)*0.8) calc(50% + (var(--my,50%) - 50%)*0.8);
   filter:brightness(.8) contrast(1.6);
 }
 .holo-gold{
+  /* loop now closes: #6b4e1e at both 0% and 50% (was #6b4e1e…#f6d889 — a hard break) */
   background:repeating-linear-gradient(110deg,
-    #6b4e1e 0%, #f6d889 14%, #b8893a 28%, #ffe9a8 42%, #8a6526 56%, #f6d889 70%);
+    #6b4e1e 0%, #f6d889 10%, #b8893a 20%, #ffe9a8 30%, #8a6526 40%, #6b4e1e 50%);
   background-size:300% 300%;
-  background-position:calc(var(--mx,50%)*1.5) calc(var(--my,50%)*1.5);
+  background-position:calc(50% + (var(--mx,50%) - 50%)*0.8) calc(50% + (var(--my,50%) - 50%)*0.8);
   filter:brightness(.9) contrast(1.4);
 }
 .holo-sparkle{
@@ -264,3 +273,12 @@ body{
 .dialog-msg{font-size:13px;color:var(--ink);line-height:1.5;margin-bottom:18px;}
 .dialog-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
 .dialog-actions .sbtn{padding:8px 16px;}
+
+/* ===================== reduced motion ===================== */
+/* freeze the pointer-driven holographic motion for users who ask for less motion */
+@media (prefers-reduced-motion: reduce){
+  .card{transition:none;}
+  .holo-rainbow,.holo-prism,.holo-gold,.holo-sparkle{background-position:50% 50% !important;}
+  .holo-glare{background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.42), rgba(255,255,255,.05) 38%, transparent 60%) !important;}
+  .seal-shimmer{background-position:50% 50% !important;}
+}
