@@ -296,6 +296,35 @@ function writeStore(arr){
 }
 function labelFor(d){return (d&&d.venueName&&d.venueName.trim())?d.venueName.trim():'Untitled';}
 
+/* ===== showcase seeds (first-run demo collection) ===== */
+const SEED_KEY='glyph.seeded.v1';
+function seedDesigns(){
+  const base=Date.now();
+  const defs=[
+    {id:'seed_hanuman', venueName:'Hanuman',            eventLine:'Tasting Menu',         location:'Kreuzberg · Berlin', date:'28 May 2026', edition:'No. 247', tagline:'Not a Trend; A Tradition', palette:'Bordeaux', rarity:'holo'},
+    {id:'seed_bandol',  venueName:'Bandol sur mer',     eventLine:'À la carte',           location:'Mitte · Berlin',     date:'12 Jun 2026', edition:'No. 031', tagline:'Petite, by the sea',       palette:'Ivory',    rarity:'common'},
+    {id:'seed_coro',    venueName:'Coro Wine & Vinyls', eventLine:'Vinyl & Natural Wine', location:'Neukölln · Berlin',  date:'05 Jul 2026', edition:'No. 112', tagline:'Spin slow, pour low',      palette:'Verdant',  rarity:'prismatic'},
+    {id:'seed_ernst',   venueName:'Ernst',              eventLine:"Chef's Counter",       location:'Wedding · Berlin',   date:'19 Sep 2026', edition:'No. 008', tagline:'Ten seats, one night',     palette:'Onyx',     rarity:'gold'}
+  ];
+  return defs.map((d,i)=>Object.assign(createDesign(), d, {isSeed:true, logoDataUrl:null, updatedAt:base-i*1000}));
+}
+// first run only: if we've never seeded and the store is empty, populate the demo set.
+// (uses a separate flag so emptying the store yourself never re-seeds.)
+function maybeSeedOnFirstRun(){
+  try{
+    if(localStorage.getItem(SEED_KEY)) return;
+    if(loadStore().length===0) writeStore(seedDesigns());
+    localStorage.setItem(SEED_KEY,'1');
+  }catch(e){/* storage unavailable — skip seeding */}
+}
+// explicit restore — confirm only when it would discard real data
+function resetToSamples(){
+  const apply=()=>{ if(writeStore(seedDesigns())){ try{localStorage.setItem(SEED_KEY,'1');}catch(e){} refreshStoreUI(); toast('Reset to samples'); } };
+  if(loadStore().length===0){ apply(); return; }
+  dialog('Replace your collection with the demo samples? This removes the other designs saved here.',
+    [{label:'Reset',value:'ok',primary:true},{label:'Cancel',value:null}]).then(c=>{ if(c==='ok') apply(); });
+}
+
 /* upsert the current editor design */
 function saveCurrent(){
   const store=loadStore();
@@ -375,7 +404,7 @@ function exportCurrent(){
 function asStr(v){return typeof v==='string'?v:(v==null?'':String(v));}
 function coerceDesign(raw){
   if(!raw || typeof raw!=='object' || Array.isArray(raw)) return null;
-  return Object.assign(createDesign(), {
+  const d=Object.assign(createDesign(), {
     id:          (typeof raw.id==='string' && raw.id) ? raw.id : genId(),
     venueName:   asStr(raw.venueName),
     logoDataUrl: (typeof raw.logoDataUrl==='string' && raw.logoDataUrl.slice(0,5)==='data:') ? raw.logoDataUrl : null,
@@ -388,6 +417,8 @@ function coerceDesign(raw){
     rarity:      RARITIES.some(r=>r.id===raw.rarity) ? raw.rarity : 'common',
     updatedAt:   typeof raw.updatedAt==='number' ? raw.updatedAt : Date.now()
   });
+  if(raw.isSeed===true) d.isSeed=true;
+  return d;
 }
 /* accept an envelope {designs:[…]}, a bare array […], or a single design object */
 function extractDesigns(parsed){
@@ -495,6 +526,7 @@ function makeTile(d){
   card.className='card thumb-card';
   card.innerHTML=cardMarkup({holo:false,back:false});   // static front face only
   thumb.appendChild(card);
+  if(d.isSeed){ const badge=document.createElement('span'); badge.className='tile-badge'; badge.textContent='Sample'; thumb.appendChild(badge); }
   thumb.addEventListener('click',()=>openFocus(d.id));
 
   const meta=document.createElement('div'); meta.className='tile-meta';
@@ -564,7 +596,7 @@ function clearLogo(){logoInput.value='';logoStatus.style.display='none';update({
 
 /* expose handlers used by inline HTML */
 window.clearLogo=clearLogo;window.saveCurrent=saveCurrent;window.newDesign=newDesign;
-window.exportCurrent=exportCurrent;
+window.exportCurrent=exportCurrent;window.resetToSamples=resetToSamples;
 window.flip=()=>editorCtl&&editorCtl.flip();
 window.resetView=()=>editorCtl&&editorCtl.reset();
 
@@ -631,6 +663,15 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
   document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importInput').click());
   document.getElementById('importInput').addEventListener('change',e=>{ const f=e.target.files[0]; if(f) importFile(f); e.target.value=''; });
   document.getElementById('exportAllBtn').addEventListener('click',exportCollection);
+
+  // overflow / settings menu
+  const menu=document.getElementById('menu');
+  document.getElementById('menuBtn').addEventListener('click',e=>{e.stopPropagation();menu.hidden=!menu.hidden;});
+  document.addEventListener('click',e=>{ if(!menu.hidden && !e.target.closest('.overflow')) menu.hidden=true; });
+  document.getElementById('resetSamplesBtn').addEventListener('click',()=>{ menu.hidden=true; resetToSamples(); });
+
+  // first-run demo collection
+  maybeSeedOnFirstRun();
 
   // initial paint
   syncInputsFromState();
