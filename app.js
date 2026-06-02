@@ -388,7 +388,7 @@ function saveCurrent(){
   const snap=Object.assign({},currentDesign);
   const i=store.findIndex(d=>d.id===snap.id);
   if(i>=0) store[i]=snap; else store.push(snap);
-  if(writeStore(store)){ toast(labelFor(snap)+' saved'); refreshStoreUI(); }
+  if(writeStore(store)){ toast(labelFor(snap)+' saved ✓'); refreshStoreUI(); }
 }
 /* restore a stored design into the editor */
 function loadDesign(id){
@@ -411,11 +411,20 @@ function duplicateDesign(id){
   const d=loadStore().find(x=>x.id===id); if(!d) return;
   const copy=Object.assign({},d,{id:genId(),updatedAt:Date.now(),venueName:labelFor(d)+' copy'});
   const store=loadStore(); store.push(copy);
-  if(writeStore(store)){ refreshStoreUI(); toast('Duplicated'); }
+  if(writeStore(store)){ refreshStoreUI(); toast('Duplicated ✓'); }
 }
 function deleteDesign(id){
-  const store=loadStore().filter(d=>d.id!==id);
-  if(writeStore(store)){ refreshStoreUI(); toast('Deleted'); }
+  const store=loadStore();
+  const idx=store.findIndex(d=>d.id===id);
+  if(idx<0) return;
+  const removed=store[idx];
+  store.splice(idx,1);
+  if(writeStore(store)){ refreshStoreUI(); toast('Deleted', {actionLabel:'Undo', onAction:()=>restoreDesign(removed)}); }
+}
+function restoreDesign(d){
+  const store=loadStore();
+  if(!store.some(x=>x.id===d.id)) store.push(d);
+  if(writeStore(store)){ refreshStoreUI(); toast('Restored ✓'); }
 }
 
 /* push state → editor inputs / chips (used by load / new) */
@@ -426,8 +435,8 @@ function syncInputsFromState(){
   else{logoStatus.style.display='none';logoInput.value='';}
 }
 function syncChipsFromState(){
-  [...tc.children].forEach(c=>c.classList.toggle('sel',c.dataset.name===currentDesign.palette));
-  [...rc.children].forEach(c=>c.classList.toggle('sel',c.dataset.id===currentDesign.rarity));
+  [...tc.children].forEach(c=>{const sel=c.dataset.name===currentDesign.palette;c.classList.toggle('sel',sel);c.setAttribute('aria-pressed',sel);});
+  [...rc.children].forEach(c=>{const sel=c.dataset.id===currentDesign.rarity;c.classList.toggle('sel',sel);c.setAttribute('aria-pressed',sel);});
 }
 
 /* ===== import / export (back up + move collections between devices) ===== */
@@ -449,11 +458,11 @@ function exportCollection(){
   const designs=loadStore();
   if(!designs.length){ toast('No saved venues to export.'); return; }
   downloadJSON('glyph-collection-'+dateStamp()+'.json', envelope(designs));
-  toast('Exported '+designs.length+' venue'+(designs.length===1?'':'s'));
+  toast('Exported '+designs.length+' venue'+(designs.length===1?'':'s')+' ✓');
 }
 function exportCurrent(){
   downloadJSON('glyph-'+slug(labelFor(currentDesign))+'.json', envelope([currentDesign]));
-  toast(labelFor(currentDesign)+' exported');
+  toast(labelFor(currentDesign)+' exported ✓');
 }
 
 /* normalise + validate one design from untrusted JSON (forgiving but type-safe) */
@@ -613,7 +622,7 @@ function makeTile(d){
   actions.append(
     mkBtn('Open','tile-btn',()=>loadDesign(d.id)),
     mkBtn('Duplicate','tile-btn',()=>duplicateDesign(d.id)),
-    mkBtn('Delete','tile-btn danger',()=>confirmDelete(tile,d.id))
+    mkBtn('Delete','tile-btn danger',()=>deleteDesign(d.id))   // immediate + Undo toast
   );
 
   tile.append(thumb,meta,actions);
@@ -624,18 +633,6 @@ function mkBtn(label,cls,onClick){
   b.addEventListener('click',e=>{e.stopPropagation();onClick();});
   return b;
 }
-function confirmDelete(tile,id){
-  const actions=tile.querySelector('.tile-actions');
-  actions.classList.add('confirming');
-  actions.innerHTML='';
-  const msg=document.createElement('span'); msg.className='confirm-msg'; msg.textContent='Delete?';
-  actions.append(
-    msg,
-    mkBtn('Yes','tile-btn danger',()=>deleteDesign(id)),
-    mkBtn('No','tile-btn',()=>renderGallery())
-  );
-}
-
 /* ===== focus: one full-3D holographic card at a time ===== */
 let focusCtl=null, focusId=null;
 function openFocus(id){
@@ -658,13 +655,22 @@ function closeFocus(){
   focusCtl=null; focusId=null;
 }
 
-/* ===== transient toast ===== */
+/* ===== transient toast (optional action button, e.g. Undo) ===== */
 let toastTimer=null;
-function toast(msg){
+function toast(msg, opts){
+  opts=opts||{};
   let el=document.getElementById('toast');
   if(!el){el=document.createElement('div');el.id='toast';el.className='toast';document.body.appendChild(el);}
-  el.textContent=msg;el.classList.add('show');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+  el.innerHTML='';
+  const span=document.createElement('span'); span.className='toast-msg'; span.textContent=msg; el.appendChild(span);
+  if(opts.actionLabel){
+    const btn=document.createElement('button'); btn.type='button'; btn.className='toast-action'; btn.textContent=opts.actionLabel;
+    btn.addEventListener('click',()=>{ clearTimeout(toastTimer); el.classList.remove('show'); if(opts.onAction) opts.onAction(); });
+    el.appendChild(btn);
+  }
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'), opts.actionLabel?5200:2200);
 }
 
 function clearLogo(){logoInput.value='';logoStatus.style.display='none';update({logoDataUrl:null});}
@@ -712,7 +718,9 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
     d.className='chip'+(name===currentDesign.palette?' sel':'');
     d.style.background=p.chip;d.style.color=p.ci;d.style.border='0.5px solid '+p.line+'66';
     d.textContent=name;d.dataset.name=name;
+    d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label','Palette '+name);
     d.onclick=()=>{update({palette:name});syncChipsFromState();};
+    d.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); d.click(); } });
     tc.appendChild(d);
   });
   // rarity chips
@@ -722,7 +730,9 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
     d.className='rchip'+(r.id===currentDesign.rarity?' sel':'');
     d.dataset.id=r.id;
     d.innerHTML=`<span class="sym">${r.sym}</span> ${r.label}`;
+    d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label',r.label);
     d.onclick=()=>{update({rarity:r.id});syncChipsFromState();};
+    d.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); d.click(); } });
     rc.appendChild(d);
   });
 
@@ -734,7 +744,11 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
   document.getElementById('focusFlip').addEventListener('click',()=>focusCtl&&focusCtl.flip());
   document.getElementById('focusOpen').addEventListener('click',()=>{ if(focusId){const id=focusId;closeFocus();loadDesign(id);} });
   document.getElementById('focusOverlay').addEventListener('click',e=>{ if(e.target.id==='focusOverlay') closeFocus(); });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !document.getElementById('focusOverlay').hidden) closeFocus(); });
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Escape') return;
+    if(!document.getElementById('focusOverlay').hidden) closeFocus();
+    else if(!menu.hidden) menu.hidden=true;
+  });
 
   // import / export collection
   document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importInput').click());

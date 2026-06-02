@@ -223,8 +223,10 @@ body{
 .design-item .del:hover{border-color:#b4574f;color:#e0857d;}
 
 /* ---- toast ---- */
-.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);background:var(--panel);border:0.5px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:999px;font-size:12px;letter-spacing:.3px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:300;box-shadow:0 12px 32px rgba(0,0,0,.55);}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(16px);display:flex;align-items:center;gap:14px;background:var(--panel);border:0.5px solid var(--line);color:var(--ink);padding:10px 18px;border-radius:999px;font-size:12px;letter-spacing:.3px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:300;box-shadow:0 12px 32px rgba(0,0,0,.55);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+.toast-action{background:transparent;border:0;color:var(--accent);font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;padding:0;}
+.toast-action:hover{text-decoration:underline;}
 
 /* ===================== platform shell ===================== */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap;padding-bottom:16px;border-bottom:0.5px solid var(--line);}
@@ -245,8 +247,11 @@ body{
 .menu-item{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;padding:9px 10px;color:var(--ink);font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;}
 .menu-item:hover{background:rgba(201,168,118,.10);}
 
-.view{margin-top:24px;}
+.view{margin-top:24px;animation:viewEnter .2s ease both;}
 .view[hidden]{display:none;}
+@keyframes viewEnter{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+@keyframes dialogIn{from{opacity:0;transform:translateY(6px) scale(.98);}to{opacity:1;transform:none;}}
 
 /* ===================== gallery ===================== */
 .gallery-grid{display:flex;flex-wrap:wrap;gap:24px;}
@@ -270,11 +275,9 @@ body{
 .tile-btn{flex:1;background:var(--panel);border:0.5px solid var(--line);border-radius:7px;padding:6px 4px;color:var(--soft);font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
 .tile-btn:hover{border-color:var(--accent);color:var(--ink);}
 .tile-btn.danger:hover{border-color:#b4574f;color:#e0857d;}
-.tile-actions.confirming{gap:6px;}
-.confirm-msg{font-size:9.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--soft);}
 
 /* ===================== focus (single-card 3D) ===================== */
-.focus-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:rgba(8,8,10,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);}
+.focus-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:rgba(8,8,10,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);animation:overlayIn .2s ease both;}
 .focus-overlay[hidden]{display:none;}
 .focus-scene{perspective:1300px;width:300px;height:420px;touch-action:none;transform:scale(var(--cs,1));transform-origin:center;}
 .focus-close{position:absolute;top:calc(20px + env(safe-area-inset-top));right:calc(24px + env(safe-area-inset-right));width:38px;height:38px;border-radius:50%;background:var(--panel);border:0.5px solid var(--line);color:var(--ink);font-size:14px;cursor:pointer;font-family:inherit;transition:all .15s;}
@@ -290,16 +293,32 @@ body{
 .gtb-actions{display:flex;gap:8px;}
 
 /* ===================== modal dialog ===================== */
-.dialog-overlay{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,8,10,.72);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);}
-.dialog{background:var(--panel);border:0.5px solid var(--line);border-radius:14px;padding:22px 22px 18px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6);}
+.dialog-overlay{position:fixed;inset:0;z-index:250;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(8,8,10,.72);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);animation:overlayIn .15s ease both;}
+.dialog{background:var(--panel);border:0.5px solid var(--line);border-radius:14px;padding:22px 22px 18px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.6);animation:dialogIn .18s ease both;}
 .dialog-msg{font-size:13px;color:var(--ink);line-height:1.5;margin-bottom:18px;}
 .dialog-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
 .dialog-actions .sbtn{padding:8px 16px;}
 
+/* ===================== focus & press states ===================== */
+/* keyboard focus ring (consistent everywhere); mouse focus stays clean */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.field input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+.thumb:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+/* consistent press feedback */
+.sbtn:active,.tab:active,.tile-btn:active,.chip:active,.rchip:active,.overflow-btn:active,
+.focus-close:active,.menu-item:active,.logo-status button:active,.toast-action:active{transform:translateY(1px);}
+.thumb:active{transform:translateY(-1px) scale(.985);}
+
 /* ===================== reduced motion ===================== */
-/* freeze the pointer-driven holographic motion for users who ask for less motion */
 @media (prefers-reduced-motion: reduce){
-  .card{transition:none;}
+  /* turn off all animation + transition motion app-wide */
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+  /* and freeze the pointer-driven holographic sweep to centre */
   .holo-rainbow,.holo-prism,.holo-gold,.holo-sparkle{background-position:50% 50% !important;}
   .holo-glare{background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.42), rgba(255,255,255,.05) 38%, transparent 60%) !important;}
   .seal-shimmer{background-position:50% 50% !important;}
