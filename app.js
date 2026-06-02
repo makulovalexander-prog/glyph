@@ -3,7 +3,7 @@
 /* ---- palettes & rarities ---- */
 const PAL={
   Onyx:{bg1:'#16161A',bg2:'#0A0A0C',ink:'#ECEAE3',soft:'#86847C',line:'#C9A876',chip:'#16161A',ci:'#C9A876'},
-  Ivory:{bg1:'#F2EEE4',bg2:'#E2DCCE',ink:'#1B1A17',soft:'#736F64',line:'#9A7B3F',chip:'#E2DCCE',ci:'#7A5E2E'},
+  Ivory:{bg1:'#F2EEE4',bg2:'#E2DCCE',ink:'#1B1A17',soft:'#5C5849',line:'#8C6E33',chip:'#E2DCCE',ci:'#7A5E2E'},
   Bordeaux:{bg1:'#26121A',bg2:'#150A0F',ink:'#ECD8C6',soft:'#A98C7A',line:'#C9A172',chip:'#26121A',ci:'#D9B488'},
   Verdant:{bg1:'#16221C',bg2:'#0C140F',ink:'#DDE7DD',soft:'#7E948A',line:'#AEC6A4',chip:'#16221C',ci:'#AEC6A4'},
 };
@@ -160,7 +160,12 @@ function fitEventIn(cardEl, d){
   el.textContent=raw.toUpperCase();
   el.style.letterSpacing=(raw.length>34?'0.4px':raw.length>22?'1px':'2px');
   const lh=1.25;
+  // hierarchy invariant: the event line is never larger than the venue name (fitNameIn ran first)
   let size=16;
+  if(!d.logoDataUrl){
+    const ns=parseFloat(cardEl.querySelector('.o-name').style.fontSize)||52;
+    size=Math.min(16, Math.max(8, Math.round(ns)-2));
+  }
   el.style.fontSize=size+'px';
   let guard=0;
   while(guard<100 && size>8){el.style.fontSize=size+'px';const lines=Math.round(el.scrollHeight/(size*lh));if(lines<=2)break;size-=1;guard++;}
