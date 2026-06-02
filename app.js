@@ -119,8 +119,13 @@ function paintCard(cardEl, d, opts){
   rsym.textContent=(RARITIES.find(r=>r.id===d.rarity)||RARITIES[0]).sym;
   rsym.style.color=p.line;
   const logo=q('.o-logo');
-  if(d.logoDataUrl){logo.src=d.logoDataUrl;logo.style.display='block';nameEl.style.display='none';}
-  else{logo.style.display='none';nameEl.style.display='';}
+  if(d.logoDataUrl){
+    logo.onerror=()=>{                                   // broken/corrupt logo → fall back to the wordmark
+      logo.onerror=null; logo.removeAttribute('src'); logo.style.display='none';
+      nameEl.style.display=''; fitNameIn(cardEl, Object.assign({},d,{logoDataUrl:null}));
+    };
+    logo.src=d.logoDataUrl; logo.style.display='block'; nameEl.style.display='none';
+  }else{ logo.onerror=null; logo.style.display='none'; nameEl.style.display=''; }
   renderSealInto(q('.o-seal'), d, !!opts.holo);
   fitNameIn(cardEl, d);
   fitEventIn(cardEl, d);
@@ -308,29 +313,42 @@ function loadImage(src){
 async function processLogo(file){
   const img=await loadImage(await readFileAsDataURL(file));
   const max=400;
-  let w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+  let w=img.naturalWidth||img.width||0, h=img.naturalHeight||img.height||0;
+  if(!w||!h){ w=h=max; }   // SVG / unknown intrinsic size → rasterise at a sane default
   if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.max(1,Math.round(w*s));h=Math.max(1,Math.round(h*s));}
   const canvas=document.createElement('canvas');
   canvas.width=w;canvas.height=h;
-  canvas.getContext('2d').drawImage(img,0,0,w,h);
-  let out=canvas.toDataURL('image/webp',0.9);
+  canvas.getContext('2d').drawImage(img,0,0,w,h);            // rasterise (also neutralises any SVG markup/scripts)
+  let out=canvas.toDataURL('image/webp',0.9);                // throws SecurityError if tainted → caller catches
   if(out.slice(0,15)!=='data:image/webp') out=canvas.toDataURL('image/png');
   return out;
 }
 
-/* ===== persistence: saved-designs store (localStorage) ===== */
+/* ===== persistence: saved-designs store (localStorage, with in-memory fallback) ===== */
 const STORE_KEY='glyph.designs.v1';
+let STORAGE_OK=true;     // resolved in boot; false in Safari private mode / disabled storage
+let memStore=null;       // session-only fallback when localStorage can't be used
+
+function storageAvailable(){
+  try{ const k='glyph.__test'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }
+  catch(e){ return false; }
+}
 function loadStore(){
+  if(!STORAGE_OK) return memStore?memStore.slice():[];
   try{const raw=localStorage.getItem(STORE_KEY);const arr=raw?JSON.parse(raw):[];return Array.isArray(arr)?arr:[];}
-  catch(e){ return []; }
+  catch(e){ STORAGE_OK=false; return memStore?memStore.slice():[]; }
 }
 function writeStore(arr){
-  try{localStorage.setItem(STORE_KEY,JSON.stringify(arr));return true;}
-  catch(e){
-    const quota=e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);
-    toast(quota?'Storage full — delete a venue and try again.':'Could not save — storage unavailable.');
-    return false;
+  if(STORAGE_OK){
+    try{localStorage.setItem(STORE_KEY,JSON.stringify(arr));return true;}
+    catch(e){
+      const quota=e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22||e.code===1014);
+      if(quota){ toast('Storage full — delete a venue and try again.'); return false; }
+      STORAGE_OK=false;          // availability error → drop to the in-memory store
+    }
   }
+  memStore=arr.slice();          // persists for this session only
+  return true;
 }
 function labelFor(d){return (d&&d.venueName&&d.venueName.trim())?d.venueName.trim():'Untitled';}
 
@@ -349,11 +367,11 @@ function seedDesigns(){
 // first run only: if we've never seeded and the store is empty, populate the demo set.
 // (uses a separate flag so emptying the store yourself never re-seeds.)
 function maybeSeedOnFirstRun(){
-  try{
-    if(localStorage.getItem(SEED_KEY)) return;
-    if(loadStore().length===0) writeStore(seedDesigns());
-    localStorage.setItem(SEED_KEY,'1');
-  }catch(e){/* storage unavailable — skip seeding */}
+  let seeded=false;
+  try{ seeded=!!localStorage.getItem(SEED_KEY); }catch(e){ seeded=false; }
+  if(seeded) return;
+  if(loadStore().length===0) writeStore(seedDesigns());   // writeStore falls back to memory if needed
+  try{ localStorage.setItem(SEED_KEY,'1'); }catch(e){}
 }
 // explicit restore — confirm only when it would discard real data
 function resetToSamples(){
@@ -678,11 +696,13 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
   logoName=document.getElementById('logoName');
   logoInput.onchange=async function(e){
     const f=e.target.files[0];if(!f)return;
+    if(f.type && !/^image\//.test(f.type)){ toast('Not an image file — choose a PNG, JPG, or WebP.'); logoInput.value=''; return; }
+    if(f.size > 40*1024*1024){ toast('That image is too large (max 40 MB).'); logoInput.value=''; return; }
     try{
-      const dataUrl=await processLogo(f);
+      const dataUrl=await processLogo(f);   // resize ≤400px + re-encode BEFORE storing
       logoStatus.style.display='flex';logoName.textContent=f.name;
       update({logoDataUrl:dataUrl});
-    }catch(err){ toast('Could not process that image.'); }
+    }catch(err){ toast('Could not read that image — try another file.'); logoInput.value=''; }
   };
 
   // palette chips
@@ -726,6 +746,14 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
   document.getElementById('menuBtn').addEventListener('click',e=>{e.stopPropagation();menu.hidden=!menu.hidden;});
   document.addEventListener('click',e=>{ if(!menu.hidden && !e.target.closest('.overflow')) menu.hidden=true; });
   document.getElementById('resetSamplesBtn').addEventListener('click',()=>{ menu.hidden=true; resetToSamples(); });
+
+  // empty-state primary CTA
+  const emptyCreate=document.getElementById('emptyCreateBtn');
+  if(emptyCreate) emptyCreate.addEventListener('click',()=>setView('editor'));
+
+  // storage availability (Safari private mode / disabled) → in-memory fallback + one-time notice
+  STORAGE_OK=storageAvailable();
+  if(!STORAGE_OK){ memStore=[]; setTimeout(()=>toast('Saving is off here — designs last this session only. Export to keep them.'),700); }
 
   // first-run demo collection
   maybeSeedOnFirstRun();

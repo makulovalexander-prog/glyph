@@ -104,8 +104,11 @@
     <div class="gallery-empty" id="galleryEmpty" hidden>
       <div class="empty-mark">✦</div>
       <div class="empty-title">No venues yet</div>
-      <div class="empty-sub">Create one in the Editor, or bring back the demo set.</div>
-      <button class="sbtn" onclick="resetToSamples()">Reset to samples</button>
+      <div class="empty-sub">Design a Tessera in the editor and hit Save — or bring back the demo set.</div>
+      <div class="empty-actions">
+        <button class="sbtn primary" id="emptyCreateBtn">Create a venue</button>
+        <button class="sbtn" onclick="resetToSamples()">Reset to samples</button>
+      </div>
     </div>
     <div class="gallery-grid" id="galleryGrid"></div>
   </section>
