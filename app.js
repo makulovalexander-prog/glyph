@@ -1,12 +1,49 @@
 /* ===== Glyph Studio — Tessera platform ===== */
 
-/* ---- palettes & rarities ---- */
-const PAL={
-  Onyx:{bg1:'#16161A',bg2:'#0A0A0C',ink:'#ECEAE3',soft:'#86847C',line:'#C9A876',chip:'#16161A',ci:'#C9A876'},
-  Ivory:{bg1:'#F2EEE4',bg2:'#E2DCCE',ink:'#1B1A17',soft:'#5C5849',line:'#8C6E33',chip:'#E2DCCE',ci:'#7A5E2E'},
-  Bordeaux:{bg1:'#26121A',bg2:'#150A0F',ink:'#ECD8C6',soft:'#A98C7A',line:'#C9A172',chip:'#26121A',ci:'#D9B488'},
-  Verdant:{bg1:'#16221C',bg2:'#0C140F',ink:'#DDE7DD',soft:'#7E948A',line:'#AEC6A4',chip:'#16221C',ci:'#AEC6A4'},
+/* ===== themes: a venue's full visual identity (data → one engine renders it) =====
+   A theme defines colour roles, typefaces, background treatment, frame style,
+   whether the hero-art slot is active, and which rarity treatments are enabled.
+   Presets are starting points; each design embeds its own (editable) theme copy. */
+const SERIF="'Cormorant Garamond',Georgia,serif", SANS="'Inter',system-ui,sans-serif";
+const ALLR=['common','holo','reverse','prismatic','gold'];
+const THEME_PRESETS={
+  hanuman:{ preset:'hanuman', name:'Hanuman',
+    colors:{bg:'#FFD400',surface:'#F2B500',ink:'#1A1206',soft:'#7A2A12',accent:'#E4002B',accent2:'#1A1206',line:'#1A1206'},
+    fonts:{display:"'Anton','Inter Tight',sans-serif",body:SANS,tagStyle:'normal'},
+    background:'halftone', frame:{weight:3,radius:6,frameless:false}, heroArt:true,
+    rarities:['common','holo','prismatic','gold'] },
+  bandol:{ preset:'bandol', name:'Bandol',
+    colors:{bg:'#F4F1EA',surface:'#ECE7DB',ink:'#1B1A17',soft:'#5C5849',accent:'#8C6E33',accent2:'#9A7B3F',line:'#CBBBA1'},
+    fonts:{display:SERIF,body:SANS,tagStyle:'italic'},
+    background:'solid', frame:{weight:0.5,radius:3,frameless:false}, heroArt:false,
+    rarities:['common','holo'] },
+  onyx:{ preset:'onyx', name:'Onyx',
+    colors:{bg:'#16161A',surface:'#0A0A0C',ink:'#ECEAE3',soft:'#86847C',accent:'#C9A876',accent2:'#C9A876',line:'#C9A876'},
+    fonts:{display:SERIF,body:SANS,tagStyle:'italic'},
+    background:'gradient', frame:{weight:1,radius:11,frameless:false}, heroArt:false, rarities:ALLR },
+  ivory:{ preset:'ivory', name:'Ivory',
+    colors:{bg:'#F2EEE4',surface:'#E2DCCE',ink:'#1B1A17',soft:'#5C5849',accent:'#8C6E33',accent2:'#9A7B3F',line:'#8C6E33'},
+    fonts:{display:SERIF,body:SANS,tagStyle:'italic'},
+    background:'gradient', frame:{weight:1,radius:11,frameless:false}, heroArt:false, rarities:ALLR },
+  bordeaux:{ preset:'bordeaux', name:'Bordeaux',
+    colors:{bg:'#26121A',surface:'#150A0F',ink:'#ECD8C6',soft:'#A98C7A',accent:'#C9A172',accent2:'#D9B488',line:'#C9A172'},
+    fonts:{display:SERIF,body:SANS,tagStyle:'italic'},
+    background:'gradient', frame:{weight:1,radius:11,frameless:false}, heroArt:false, rarities:ALLR },
+  verdant:{ preset:'verdant', name:'Verdant',
+    colors:{bg:'#16221C',surface:'#0C140F',ink:'#DDE7DD',soft:'#7E948A',accent:'#AEC6A4',accent2:'#AEC6A4',line:'#AEC6A4'},
+    fonts:{display:SERIF,body:SANS,tagStyle:'italic'},
+    background:'gradient', frame:{weight:1,radius:11,frameless:false}, heroArt:false, rarities:ALLR },
 };
+const THEME_ORDER=['hanuman','bandol','onyx','ivory','bordeaux','verdant'];
+function themeCopy(id){ return JSON.parse(JSON.stringify(THEME_PRESETS[id]||THEME_PRESETS.onyx)); }
+function paletteToPreset(pal){ return ({Onyx:'onyx',Ivory:'ivory',Bordeaux:'bordeaux',Verdant:'verdant'})[pal]||'onyx'; }
+// resolve a design's theme (migrating legacy `palette` strings on the fly)
+function getTheme(d){
+  if(d && d.theme && d.theme.colors) return d.theme;
+  if(d && typeof d.palette==='string') return themeCopy(paletteToPreset(d.palette));
+  return themeCopy('onyx');
+}
+
 const RARITIES=[
   {id:'common',label:'Common',sym:'●'},
   {id:'holo',label:'Holographic',sym:'◆'},
@@ -23,12 +60,13 @@ function createDesign(overrides){
     id:          genId(),
     venueName:   'HANUMAN',
     logoDataUrl: null,
+    heroArtUrl:  null,             // optional central illustration (above bg, below text)
     eventLine:   'Tasting Menu N° 7',
     location:    'Kreuzberg · Berlin',
     date:        '28 May 2026',
     edition:     'No. 247',
     tagline:     'Not a Trend; A Tradition',
-    palette:     'Onyx',
+    theme:       themeCopy('onyx'),
     rarity:      'holo',
     updatedAt:   Date.now()
   }, overrides||{});
@@ -43,7 +81,7 @@ function update(patch){
 }
 
 /* module-level DOM refs (assigned in boot) */
-let editorCard, editorScene, editorCtl, logoInput, logoStatus, logoName, tc, rc;
+let editorCard, editorScene, editorCtl, logoInput, logoStatus, logoName, heroInput, heroStatus, heroName, tc, rc;
 
 /* ===== card template — shared by editor, gallery thumbnails, and focus ===== */
 // holo:false → omit the GPU-heavy mix-blend layers (thumbnails).  back:false → front only.
@@ -60,6 +98,7 @@ function cardMarkup(opts){
     <div class="face front">
       <div class="f-tex"></div>
       <div class="f-matte"></div>
+      <div class="f-hero-art"><img class="o-hero" alt=""/></div>
       <div class="f-frame"></div>
       <div class="f-frame2"></div>
       <div class="f-top">
@@ -99,13 +138,26 @@ function cardMarkup(opts){
 /* paint a design into a .card element. opts.holo controls the seal shimmer too. */
 function paintCard(cardEl, d, opts){
   opts=opts||{};
-  const p=PAL[d.palette]||PAL.Onyx;
-  cardEl.style.setProperty('--p-bg1',p.bg1);
-  cardEl.style.setProperty('--p-bg2',p.bg2);
-  cardEl.style.setProperty('--p-ink',p.ink);
-  cardEl.style.setProperty('--p-soft',p.soft);
-  cardEl.style.setProperty('--p-line',p.line);
+  const t=getTheme(d), c=t.colors;
+  // colour roles → CSS vars (the front-face CSS reads these)
+  cardEl.style.setProperty('--p-bg1',c.bg);
+  cardEl.style.setProperty('--p-bg2',c.surface||c.bg);
+  cardEl.style.setProperty('--p-ink',c.ink);
+  cardEl.style.setProperty('--p-soft',c.soft);
+  cardEl.style.setProperty('--p-line',c.line);
+  cardEl.style.setProperty('--p-accent',c.accent||c.line);
+  cardEl.style.setProperty('--p-accent2',c.accent2||c.accent||c.line);
+  // typefaces
+  cardEl.style.setProperty('--p-display',t.fonts.display||SERIF);
+  cardEl.style.setProperty('--p-body',t.fonts.body||SANS);
+  cardEl.style.setProperty('--p-tag-style',t.fonts.tagStyle||'italic');
+  // frame
+  cardEl.style.setProperty('--p-frame-w',(t.frame.frameless?0:(t.frame.weight||1))+'px');
+  cardEl.style.setProperty('--p-frame-r',(t.frame.radius!=null?t.frame.radius:11)+'px');
+  cardEl.setAttribute('data-bg', t.background||'gradient');
+  cardEl.toggleAttribute('data-frameless', !!t.frame.frameless);
   cardEl.setAttribute('data-rarity', d.rarity||'common');
+
   const q=s=>cardEl.querySelector(s);
   q('.o-edition').textContent=d.edition||'';
   const locEl=q('.o-loc');
@@ -117,15 +169,19 @@ function paintCard(cardEl, d, opts){
   nameEl.textContent=(d.venueName||' ').toUpperCase();
   const rsym=q('.o-rsym');
   rsym.textContent=(RARITIES.find(r=>r.id===d.rarity)||RARITIES[0]).sym;
-  rsym.style.color=p.line;
+  rsym.style.color=c.accent||c.line;
+  // logo (broken → wordmark fallback)
   const logo=q('.o-logo');
   if(d.logoDataUrl){
-    logo.onerror=()=>{                                   // broken/corrupt logo → fall back to the wordmark
-      logo.onerror=null; logo.removeAttribute('src'); logo.style.display='none';
-      nameEl.style.display=''; fitNameIn(cardEl, Object.assign({},d,{logoDataUrl:null}));
-    };
+    logo.onerror=()=>{ logo.onerror=null; logo.removeAttribute('src'); logo.style.display='none'; nameEl.style.display=''; fitNameIn(cardEl, Object.assign({},d,{logoDataUrl:null})); };
     logo.src=d.logoDataUrl; logo.style.display='block'; nameEl.style.display='none';
   }else{ logo.onerror=null; logo.style.display='none'; nameEl.style.display=''; }
+  // hero art (only when the theme enables the slot AND an image is set)
+  const hero=q('.o-hero'), heroWrap=q('.f-hero-art');
+  if(t.heroArt && d.heroArtUrl){
+    hero.onerror=()=>{ hero.onerror=null; hero.removeAttribute('src'); heroWrap.style.display='none'; };
+    hero.src=d.heroArtUrl; heroWrap.style.display='';
+  }else{ hero.onerror=null; hero.removeAttribute('src'); heroWrap.style.display='none'; }
   renderSealInto(q('.o-seal'), d, !!opts.holo);
   fitNameIn(cardEl, d);
   fitEventIn(cardEl, d);
@@ -208,7 +264,7 @@ function guillochePath(seed){
   return d;
 }
 function escapeXml(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
-function sealSVG(g,venue,date,p){
+function sealSVG(g,venue,date,col){
   const micro=((venue||'GLYPH')+'   ·   '+(date||'')+'   ·   ').toUpperCase();
   const circ=2*Math.PI*31, charW=3.0*0.6+0.45;
   const reps=Math.max(2,Math.ceil(circ/(micro.length*charW))+1);
@@ -218,22 +274,23 @@ function sealSVG(g,venue,date,p){
       <clipPath id="sealclip"><circle cx="37" cy="37" r="25.5"/></clipPath>
       <path id="microring" d="M 37,6 a 31,31 0 1,1 -0.01,0" fill="none"/>
     </defs>
-    <g clip-path="url(#sealclip)" fill="none" stroke="${p.line}" stroke-width="0.25" opacity="0.16">
+    <g clip-path="url(#sealclip)" fill="none" stroke="${col}" stroke-width="0.25" opacity="0.16">
       <path d="${g}"/>
     </g>
-    <circle cx="37" cy="37" r="35" fill="none" stroke="${p.line}" stroke-width="0.8" opacity="0.6"/>
-    <circle cx="37" cy="37" r="28" fill="none" stroke="${p.line}" stroke-width="0.4" opacity="0.35"/>
-    <text font-family="Inter,sans-serif" font-size="3.05" letter-spacing="0.45" fill="${p.line}" opacity="0.5">
+    <circle cx="37" cy="37" r="35" fill="none" stroke="${col}" stroke-width="0.8" opacity="0.55"/>
+    <circle cx="37" cy="37" r="28" fill="none" stroke="${col}" stroke-width="0.4" opacity="0.32"/>
+    <text font-family="Inter,sans-serif" font-size="3.05" letter-spacing="0.45" fill="${col}" opacity="0.5">
       <textPath href="#microring" startOffset="0">${microText}</textPath>
     </text>
-    <text x="37" y="44" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="20" fill="${p.line}">✦</text>
+    <text x="37" y="44" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="20" fill="${col}" opacity="0.85">✦</text>
   </svg>`;
 }
-// withShimmer adds the holo-masked layer (skip it for static thumbnails)
+// The guilloché seal is Glyph's constant mark — same structure on every theme,
+// drawn in the card's ink so it always reads. withShimmer adds the holo-masked layer.
 function renderSealInto(host, d, withShimmer){
-  const venue=d.venueName||'', date=d.date||'', p=PAL[d.palette]||PAL.Onyx;
+  const venue=d.venueName||'', date=d.date||'', sealCol=getTheme(d).colors.ink;
   const g=guillochePath(seedFrom(venue||'GLYPH'));
-  host.innerHTML=sealSVG(g,venue,date,p)+(withShimmer?'<div class="seal-shimmer"></div>':'');
+  host.innerHTML=sealSVG(g,venue,date,sealCol)+(withShimmer?'<div class="seal-shimmer"></div>':'');
   if(withShimmer){
     const sh=host.querySelector('.seal-shimmer');
     const maskSvg="<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 74 74'><path d='"+g+"' fill='none' stroke='#fff' stroke-width='0.6' stroke-linejoin='round'/></svg>";
@@ -362,10 +419,10 @@ const SEED_KEY='glyph.seeded.v1';
 function seedDesigns(){
   const base=Date.now();
   const defs=[
-    {id:'seed_hanuman', venueName:'Hanuman',            eventLine:'Tasting Menu',         location:'Kreuzberg · Berlin', date:'28 May 2026', edition:'No. 247', tagline:'Not a Trend; A Tradition', palette:'Bordeaux', rarity:'holo'},
-    {id:'seed_bandol',  venueName:'Bandol sur mer',     eventLine:'À la carte',           location:'Mitte · Berlin',     date:'12 Jun 2026', edition:'No. 031', tagline:'Petite, by the sea',       palette:'Ivory',    rarity:'common'},
-    {id:'seed_coro',    venueName:'Coro Wine & Vinyls', eventLine:'Vinyl & Natural Wine', location:'Neukölln · Berlin',  date:'05 Jul 2026', edition:'No. 112', tagline:'Spin slow, pour low',      palette:'Verdant',  rarity:'prismatic'},
-    {id:'seed_ernst',   venueName:'Ernst',              eventLine:"Chef's Counter",       location:'Wedding · Berlin',   date:'19 Sep 2026', edition:'No. 008', tagline:'Ten seats, one night',     palette:'Onyx',     rarity:'gold'}
+    {id:'seed_hanuman', venueName:'Hanuman',            eventLine:'Tasting Menu',         location:'Kreuzberg · Berlin', date:'28 May 2026', edition:'No. 247', tagline:'Not a Trend; A Tradition', theme:themeCopy('hanuman'), heroArtUrl:'hero-hanuman.svg', rarity:'holo'},
+    {id:'seed_bandol',  venueName:'Bandol sur mer',     eventLine:'À la carte',           location:'Mitte · Berlin',     date:'12 Jun 2026', edition:'No. 031', tagline:'Petite, by the sea',       theme:themeCopy('bandol'),  rarity:'common'},
+    {id:'seed_coro',    venueName:'Coro Wine & Vinyls', eventLine:'Vinyl & Natural Wine', location:'Neukölln · Berlin',  date:'05 Jul 2026', edition:'No. 112', tagline:'Spin slow, pour low',      theme:themeCopy('verdant'), rarity:'prismatic'},
+    {id:'seed_ernst',   venueName:'Ernst',              eventLine:"Chef's Counter",       location:'Wedding · Berlin',   date:'19 Sep 2026', edition:'No. 008', tagline:'Ten seats, one night',     theme:themeCopy('onyx'),    rarity:'gold'}
   ];
   return defs.map((d,i)=>Object.assign(createDesign(), d, {isSeed:true, logoDataUrl:null, updatedAt:base-i*1000}));
 }
@@ -400,13 +457,14 @@ function loadDesign(id){
   const found=loadStore().find(d=>d.id===id);
   if(!found){ toast('That venue is no longer there.'); refreshStoreUI(); return; }
   currentDesign=Object.assign(createDesign(),found);
+  if(!found.theme || !found.theme.colors) currentDesign.theme=themeCopy(paletteToPreset(found.palette)); // migrate legacy palette
   syncInputsFromState(); syncChipsFromState(); paintEditor();
   setView('editor');
   toast(labelFor(currentDesign)+' opened');
 }
 /* clear to a blank design with a fresh id */
 function newDesign(){
-  currentDesign=createDesign({venueName:'',eventLine:'',location:'',date:'',edition:'',tagline:'',logoDataUrl:null,palette:'Onyx',rarity:'common'});
+  currentDesign=createDesign({venueName:'',eventLine:'',location:'',date:'',edition:'',tagline:'',logoDataUrl:null,heroArtUrl:null,theme:themeCopy('onyx'),rarity:'common'});
   syncInputsFromState(); syncChipsFromState(); paintEditor();
   setView('editor');
   toast('New blank design');
@@ -438,10 +496,21 @@ function syncInputsFromState(){
   Object.entries(F).forEach(([id,key])=>{document.getElementById(id).value=currentDesign[key]??'';});
   if(currentDesign.logoDataUrl){logoStatus.style.display='flex';logoName.textContent='Logo attached';}
   else{logoStatus.style.display='none';logoInput.value='';}
+  // hero-art slot (only shown when the active theme enables it)
+  const heroOn=getTheme(currentDesign).heroArt;
+  document.getElementById('heroField').hidden=!heroOn;
+  if(heroOn && currentDesign.heroArtUrl){heroStatus.style.display='flex';heroName.textContent='Hero art attached';}
+  else{heroStatus.style.display='none';heroInput.value='';}
 }
 function syncChipsFromState(){
-  [...tc.children].forEach(c=>{const sel=c.dataset.name===currentDesign.palette;c.classList.toggle('sel',sel);c.setAttribute('aria-pressed',sel);});
-  [...rc.children].forEach(c=>{const sel=c.dataset.id===currentDesign.rarity;c.classList.toggle('sel',sel);c.setAttribute('aria-pressed',sel);});
+  const t=getTheme(currentDesign);
+  [...tc.children].forEach(c=>{const sel=c.dataset.preset===t.preset;c.classList.toggle('sel',sel);c.setAttribute('aria-pressed',sel);});
+  const enabled=t.rarities||ALLR;
+  [...rc.children].forEach(c=>{
+    const sel=c.dataset.id===currentDesign.rarity, on=enabled.includes(c.dataset.id);
+    c.classList.toggle('sel',sel); c.classList.toggle('disabled',!on);
+    c.setAttribute('aria-pressed',sel); c.setAttribute('aria-disabled',String(!on));
+  });
 }
 
 /* ===== import / export (back up + move collections between devices) ===== */
@@ -472,18 +541,36 @@ function exportCurrent(){
 
 /* normalise + validate one design from untrusted JSON (forgiving but type-safe) */
 function asStr(v){return typeof v==='string'?v:(v==null?'':String(v));}
+function okImageRef(s){ return typeof s==='string' && (s.slice(0,5)==='data:' || /^[\w][\w./-]*\.(svg|png|webp|jpe?g|gif)$/i.test(s)); }
+// build a clean theme from untrusted JSON (merge over a known-good base; block CSS injection in font names)
+function sanitizeTheme(raw){
+  const base=themeCopy('onyx');
+  if(!raw || typeof raw!=='object') return base;
+  const hex=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$/.test(v))?v:null;
+  const font=v=>(typeof v==='string'&&/^[\w\s,'"().-]{1,120}$/.test(v))?v:null;
+  if(typeof raw.preset==='string') base.preset=raw.preset.slice(0,24);
+  if(typeof raw.name==='string') base.name=raw.name.slice(0,40);
+  if(raw.colors&&typeof raw.colors==='object') for(const k of ['bg','surface','ink','soft','accent','accent2','line']){ const h=hex(raw.colors[k]); if(h) base.colors[k]=h; }
+  if(raw.fonts&&typeof raw.fonts==='object'){ const df=font(raw.fonts.display),bf=font(raw.fonts.body); if(df)base.fonts.display=df; if(bf)base.fonts.body=bf; if(raw.fonts.tagStyle==='normal'||raw.fonts.tagStyle==='italic')base.fonts.tagStyle=raw.fonts.tagStyle; }
+  if(['solid','gradient','halftone'].includes(raw.background)) base.background=raw.background;
+  if(raw.frame&&typeof raw.frame==='object'){ if(typeof raw.frame.weight==='number')base.frame.weight=Math.max(0,Math.min(8,raw.frame.weight)); if(typeof raw.frame.radius==='number')base.frame.radius=Math.max(0,Math.min(40,raw.frame.radius)); base.frame.frameless=!!raw.frame.frameless; }
+  base.heroArt=!!raw.heroArt;
+  if(Array.isArray(raw.rarities)){ const ok=raw.rarities.filter(r=>RARITIES.some(x=>x.id===r)); if(ok.length) base.rarities=ok; }
+  return base;
+}
 function coerceDesign(raw){
   if(!raw || typeof raw!=='object' || Array.isArray(raw)) return null;
   const d=Object.assign(createDesign(), {
     id:          (typeof raw.id==='string' && raw.id) ? raw.id : genId(),
     venueName:   asStr(raw.venueName),
     logoDataUrl: (typeof raw.logoDataUrl==='string' && raw.logoDataUrl.slice(0,5)==='data:') ? raw.logoDataUrl : null,
+    heroArtUrl:  okImageRef(raw.heroArtUrl) ? raw.heroArtUrl : null,
     eventLine:   asStr(raw.eventLine),
     location:    asStr(raw.location),
     date:        asStr(raw.date),
     edition:     asStr(raw.edition),
     tagline:     asStr(raw.tagline),
-    palette:     PAL[raw.palette] ? raw.palette : 'Onyx',
+    theme:       (raw.theme && typeof raw.theme==='object' && raw.theme.colors) ? sanitizeTheme(raw.theme) : themeCopy(paletteToPreset(raw.palette)),
     rarity:      RARITIES.some(r=>r.id===raw.rarity) ? raw.rarity : 'common',
     updatedAt:   typeof raw.updatedAt==='number' ? raw.updatedAt : Date.now()
   });
@@ -620,7 +707,7 @@ function makeTile(d){
   const nm=document.createElement('span'); nm.className='tile-name'; nm.textContent=labelFor(d);
   const R=RARITIES.find(r=>r.id===d.rarity)||RARITIES[0];
   const sym=document.createElement('span'); sym.className='tile-sym'; sym.textContent=R.sym; sym.title=R.label;
-  sym.style.color=(PAL[d.palette]||PAL.Onyx).line;
+  sym.style.color=getTheme(d).colors.accent;
   meta.append(nm,sym);
 
   const actions=document.createElement('div'); actions.className='tile-actions';
@@ -679,9 +766,10 @@ function toast(msg, opts){
 }
 
 function clearLogo(){logoInput.value='';logoStatus.style.display='none';update({logoDataUrl:null});}
+function clearHero(){heroInput.value='';heroStatus.style.display='none';update({heroArtUrl:null});}
 
 /* expose handlers used by inline HTML */
-window.clearLogo=clearLogo;window.saveCurrent=saveCurrent;window.newDesign=newDesign;
+window.clearLogo=clearLogo;window.clearHero=clearHero;window.saveCurrent=saveCurrent;window.newDesign=newDesign;
 window.exportCurrent=exportCurrent;window.resetToSamples=resetToSamples;
 window.flip=()=>editorCtl&&editorCtl.flip();
 window.resetView=()=>editorCtl&&editorCtl.reset();
@@ -716,15 +804,35 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
     }catch(err){ toast('Could not read that image — try another file.'); logoInput.value=''; }
   };
 
-  // palette chips
+  // hero-art upload (same pipeline as the logo: validate → resize → store)
+  heroInput=document.getElementById('heroInput');
+  heroStatus=document.getElementById('heroStatus');
+  heroName=document.getElementById('heroName');
+  heroInput.onchange=async function(e){
+    const f=e.target.files[0];if(!f)return;
+    if(f.type && !/^image\//.test(f.type)){ toast('Not an image file — choose a PNG or SVG.'); heroInput.value=''; return; }
+    if(f.size > 40*1024*1024){ toast('That image is too large (max 40 MB).'); heroInput.value=''; return; }
+    try{
+      const dataUrl=await processLogo(f);
+      heroStatus.style.display='flex';heroName.textContent=f.name;
+      update({heroArtUrl:dataUrl});
+    }catch(err){ toast('Could not read that image — try another file.'); heroInput.value=''; }
+  };
+
+  // theme chips (apply a preset; each design embeds its own editable copy)
   tc=document.getElementById('themes');
-  Object.keys(PAL).forEach(name=>{
-    const p=PAL[name];const d=document.createElement('div');
-    d.className='chip'+(name===currentDesign.palette?' sel':'');
-    d.style.background=p.chip;d.style.color=p.ci;d.style.border='0.5px solid '+p.line+'66';
-    d.textContent=name;d.dataset.name=name;
-    d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label','Palette '+name);
-    d.onclick=()=>{update({palette:name});syncChipsFromState();};
+  THEME_ORDER.forEach(id=>{
+    const t=THEME_PRESETS[id];const d=document.createElement('div');
+    d.className='chip'+(currentDesign.theme&&currentDesign.theme.preset===id?' sel':'');
+    d.style.background=t.colors.bg;d.style.color=t.colors.ink;d.style.border='0.5px solid '+t.colors.line;
+    d.textContent=t.name;d.dataset.preset=id;
+    d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label','Theme '+t.name);
+    d.onclick=()=>{
+      const nt=themeCopy(id);
+      const patch={theme:nt};
+      if(!nt.rarities.includes(currentDesign.rarity)) patch.rarity=nt.rarities[0];  // clamp to an enabled rarity
+      update(patch); syncInputsFromState(); syncChipsFromState();
+    };
     d.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); d.click(); } });
     tc.appendChild(d);
   });
@@ -736,7 +844,7 @@ window.resetView=()=>editorCtl&&editorCtl.reset();
     d.dataset.id=r.id;
     d.innerHTML=`<span class="sym">${r.sym}</span> ${r.label}`;
     d.tabIndex=0; d.setAttribute('role','button'); d.setAttribute('aria-label',r.label);
-    d.onclick=()=>{update({rarity:r.id});syncChipsFromState();};
+    d.onclick=()=>{ if(!getTheme(currentDesign).rarities.includes(r.id)) return; update({rarity:r.id});syncChipsFromState(); };
     d.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); d.click(); } });
     rc.appendChild(d);
   });

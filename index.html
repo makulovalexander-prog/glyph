@@ -53,6 +53,18 @@
             <button onclick="clearLogo()">Remove</button>
           </div>
         </div>
+        <div class="field" id="heroField" hidden>
+          <label>Hero art (central illustration)</label>
+          <label class="logo-drop">
+            <input type="file" id="heroInput" accept="image/*"/>
+            <div class="lt">Upload the venue's hero art</div>
+            <div class="ls">PNG/SVG with transparency · sits behind the name</div>
+          </label>
+          <div class="logo-status" id="heroStatus">
+            <span id="heroName"></span>
+            <button onclick="clearHero()">Remove</button>
+          </div>
+        </div>
         <div class="field">
           <label>Venue name</label>
           <input id="venue"/>
@@ -70,7 +82,7 @@
           <div class="field"><label>Tagline</label><input id="tag"/></div>
         </div>
         <div class="field">
-          <label>Frame palette</label>
+          <label>Theme</label>
           <div class="chips" id="themes"></div>
         </div>
         <div class="field">

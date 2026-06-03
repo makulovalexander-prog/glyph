@@ -1,8 +1,11 @@
 :root{
   --bg:#0E0E10; --panel:#161618; --line:#2A2A2D; --ink:#ECEAE3; --soft:#8A8880;
   --accent:#C9A876;
-  /* palette vars, overwritten by JS */
+  /* theme vars (colour roles, fonts, frame) — overwritten per-card by JS paintCard() */
   --p-bg1:#16161A; --p-bg2:#0A0A0C; --p-ink:#ECEAE3; --p-soft:#86847C; --p-line:#C9A876;
+  --p-accent:#C9A876; --p-accent2:#C9A876;
+  --p-display:'Cormorant Garamond',Georgia,serif; --p-body:'Inter',system-ui,sans-serif; --p-tag-style:italic;
+  --p-frame-w:1px; --p-frame-r:11px;
   --cs:1;  /* card scale — reduced on small screens so the 3D card never clips */
   /* spacing scale: multiples of 4 (8/12/16/20/24/28). radius scale: 8 / 12 / 16 / pill. */
   --sh-pop:0 12px 32px rgba(0,0,0,.5);     /* popovers: toast, menu */
@@ -52,6 +55,7 @@ body{
 .rchip{border:0.5px solid var(--line);border-radius:8px;padding:9px;cursor:pointer;font-size:11px;color:var(--soft);transition:all .15s;display:flex;align-items:center;gap:8px;letter-spacing:.3px;}
 .rchip .sym{font-size:13px;}
 .rchip.sel{border-color:var(--accent);color:var(--ink);background:rgba(201,168,118,.08);}
+.rchip.disabled{opacity:.32;cursor:not-allowed;}
 
 /* ---- stage ---- */
 .stage{
@@ -88,23 +92,31 @@ body{
 
 /* ---------- FRONT ---------- */
 .front{
-  background:linear-gradient(155deg,var(--p-bg1),var(--p-bg2));
+  background:var(--p-bg1);
   display:flex;flex-direction:column;align-items:center;
   padding:22px 20px 18px;
 }
-.f-tex{position:absolute;inset:0;opacity:.04;pointer-events:none;
-  background:repeating-linear-gradient(45deg,var(--p-line) 0 1px,transparent 1px 14px);}
-.f-frame{position:absolute;inset:14px;border:1px solid var(--p-line);border-radius:11px;opacity:.5;pointer-events:none;}
-.f-frame2{position:absolute;inset:20px;border:0.5px solid var(--p-line);border-radius:8px;opacity:.28;pointer-events:none;}
+/* background treatment (theme.background) */
+.card[data-bg="gradient"] .front{background:linear-gradient(155deg,var(--p-bg1),var(--p-bg2));}
+.f-tex{position:absolute;inset:0;opacity:0;pointer-events:none;}
+.card[data-bg="gradient"] .f-tex{opacity:.04;background:repeating-linear-gradient(45deg,var(--p-line) 0 1px,transparent 1px 14px);}
+.card[data-bg="halftone"] .f-tex{opacity:.22;background-image:radial-gradient(var(--p-ink) 1px,transparent 1.4px);background-size:6px 6px;}
+.f-frame{position:absolute;inset:14px;border:var(--p-frame-w) solid var(--p-line);border-radius:var(--p-frame-r);opacity:.7;pointer-events:none;}
+.f-frame2{position:absolute;inset:20px;border:0.5px solid var(--p-line);border-radius:calc(var(--p-frame-r) - 3px);opacity:.28;pointer-events:none;}
+.card[data-frameless] .f-frame,.card[data-frameless] .f-frame2{display:none;}
+/* hero art: central illustration, above the background, below the text.
+   biased to the lower-centre so the venue name reads on clean background above it */
+.f-hero-art{position:absolute;left:0;right:0;top:36%;bottom:3%;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
+.f-hero-art img{max-width:56%;max-height:100%;object-fit:contain;}
 .f-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2;margin-top:4px;flex:none;}
 .f-presence{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .f-edition{font-size:9px;letter-spacing:1.5px;color:var(--p-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%;text-align:right;}
 .f-rule{width:78%;height:0.5px;background:linear-gradient(90deg,transparent,var(--p-line),transparent);margin:8px 0;opacity:.6;z-index:2;flex:none;}
 .f-hero{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;z-index:2;min-height:0;gap:10px;}
 .f-logo{max-width:78%;max-height:112px;object-fit:contain;}
-.f-name{font-family:'Cormorant Garamond',Georgia,serif;color:var(--p-ink);font-weight:500;text-align:center;line-height:1;white-space:nowrap;max-width:90%;overflow-wrap:anywhere;}
+.f-name{font-family:var(--p-display);color:var(--p-ink);font-weight:500;text-align:center;line-height:1;white-space:nowrap;max-width:90%;overflow-wrap:anywhere;}
 .f-namewrap{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;}
-.f-event{font-family:'Inter',system-ui,sans-serif;font-weight:500;text-transform:uppercase;text-align:center;color:var(--p-line);max-width:84%;line-height:1.25;letter-spacing:2px;z-index:2;overflow-wrap:anywhere;word-break:break-word;}
+.f-event{font-family:var(--p-body);font-weight:600;text-transform:uppercase;text-align:center;color:var(--p-accent);max-width:84%;line-height:1.25;letter-spacing:2px;z-index:2;overflow-wrap:anywhere;word-break:break-word;}
 .f-loc{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;z-index:2;flex:none;max-width:92%;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}
 .f-seal{position:relative;width:74px;height:74px;z-index:2;margin:4px 0;flex:none;}
 .seal-shimmer{
@@ -120,7 +132,7 @@ body{
   -webkit-mask-position:center;mask-position:center;
 }
 .f-date{font-size:10px;letter-spacing:2.5px;color:var(--p-ink);opacity:.85;z-index:2;margin-top:2px;flex:none;max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
-.f-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;min-height:16px;flex:none;max-width:74%;text-align:center;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}
+.f-tag{font-family:var(--p-display);font-style:var(--p-tag-style);font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;min-height:16px;flex:none;max-width:74%;text-align:center;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;}
 .f-rarity{position:absolute;bottom:14px;right:16px;font-size:12px;z-index:3;}
 
 /* ---------- BACK ---------- */

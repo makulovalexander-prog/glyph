@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 248">
+  <!-- placeholder hero art: bold punk skull (replace by uploading the real skull-mortar art) -->
+  <path d="M100 14C55 14 28 47 28 92c0 23 8 41 22 53v27c0 10 8 18 18 18h2v19c0 9 7 16 16 16h28c9 0 16-7 16-16v-19h2c10 0 18-8 18-18v-27c14-12 22-30 22-53 0-45-27-78-72-78Z" fill="#16100A"/>
+  <ellipse cx="71" cy="96" rx="21" ry="25" fill="#E4002B"/>
+  <ellipse cx="129" cy="96" rx="21" ry="25" fill="#E4002B"/>
+  <path d="M100 116l12 28H88Z" fill="#E4002B"/>
+  <g fill="#E4002B">
+    <rect x="79" y="192" width="7" height="33" rx="2"/>
+    <rect x="96" y="192" width="8" height="35" rx="2"/>
+    <rect x="114" y="192" width="7" height="33" rx="2"/>
+  </g>
+</svg>

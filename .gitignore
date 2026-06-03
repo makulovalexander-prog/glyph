@@ -6,4 +6,8 @@
 *~
 
 # Claude Code local (machine-specific) settings
-.claude/settings.local.json
+.claude/
+
+# local tooling (code-graph index, MCP config)
+.codegraph/
+.mcp.json
