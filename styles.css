@@ -10,6 +10,27 @@
   /* spacing scale: multiples of 4 (8/12/16/20/24/28). radius scale: 8 / 12 / 16 / pill. */
   --sh-pop:0 12px 32px rgba(0,0,0,.5);     /* popovers: toast, menu */
   --sh-modal:0 24px 64px rgba(0,0,0,.55);  /* modals: dialog */
+
+  /* ---- design-system token compatibility shim ----
+     The hand-written CSS above does NOT use these (it uses --bg/--panel/--p-* etc.),
+     so the app already renders correctly outside claude.ai. They're defined here as a
+     safety net: if any artifact-style code references a Claude design-system token, it
+     resolves to this dark theme instead of collapsing to a browser default. */
+  --color-background-primary:#0E0E10;
+  --color-background-secondary:#161618;
+  --color-background-tertiary:#1C1C1E;
+  --color-text-primary:#ECEAE3;
+  --color-text-secondary:#A0A09A;
+  --color-text-tertiary:#6A6A64;
+  --color-border-primary:#3A3A3E;
+  --color-border-secondary:#2A2A2D;
+  --color-border-tertiary:#222224;
+  --font-sans:'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono:'JetBrains Mono', 'Fira Code', monospace;
+  --border-radius-sm:6px;
+  --border-radius-md:8px;
+  --border-radius-lg:12px;
+  --border-radius-xl:16px;
 }
 /* register the light-driving props so the browser can interpolate them (smooth motion + eased reset) */
 @property --mx{syntax:'<percentage>';inherits:true;initial-value:50%;}
