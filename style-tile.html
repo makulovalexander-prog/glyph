@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glyph — Style Tile · Loud Object, Quiet Vessel</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* ===================================================================
+   GLYPH STYLE TILE
+   A direction probe, not the app. Demonstrates the kxd × olderbrother
+   thesis: a dyed-paper VESSEL (everything) holding one screaming
+   holographic OBJECT (the focused tessera).
+   Self-hosted fonts only · no network · no CDN.
+   =================================================================== */
+
+/* ---- the vessel: naturally-dyed earth palette ---- */
+:root{
+  --dye-indigo:#29333f;  --dye-indigo-deep:#1d2530;
+  --dye-kakishibu:#6b4a32; --dye-walnut:#3b3027;
+  --dye-madder:#8a3a32;  --dye-onionskin:#c9a15b;
+  --dye-oat:#e6ddc9;     --dye-clay:#b08463;  --dye-sage:#7c8268;
+  --paper:#e6ddc9;       --ink:#3b3027;
+  --hair:rgba(201,161,91,.55);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{
+  background:var(--dye-indigo-deep);
+  color:var(--paper);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  /* dye mottling + a faint vat-indigo wash; never a flat fill */
+  background-image:
+    radial-gradient(140% 120% at 12% -10%, #36424f 0%, transparent 55%),
+    radial-gradient(120% 120% at 110% 120%, #20303a 0%, transparent 50%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23n)' opacity='0.05'/></svg>");
+}
+
+/* fiber/grain a "paper" surface carries — reused everywhere */
+.grain::before{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='120' height='120' filter='url(%23f)' opacity='0.5'/></svg>");
+  mix-blend-mode:multiply;opacity:.10;
+}
+
+.wrap{max-width:1180px;margin:0 auto;padding:34px 30px 60px;}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+  padding-bottom:18px;border-bottom:1px solid var(--hair);}
+.mast h1{
+  font-family:'Anton',sans-serif;font-weight:400;margin:0;
+  font-size:clamp(40px,7vw,82px);line-height:.86;letter-spacing:.01em;
+  color:var(--dye-oat);text-transform:uppercase;
+  text-shadow:2px 2px 0 var(--dye-madder);   /* riso misregister */
+}
+.mast .sub{font-family:'Cormorant Garamond',serif;font-style:italic;
+  font-size:19px;color:var(--dye-onionskin);opacity:.9;margin-top:6px;}
+.stamp{font-family:ui-monospace,'SFMono-Regular',Menlo,monospace;
+  font-size:10.5px;letter-spacing:.18em;color:var(--dye-clay);text-align:right;
+  line-height:1.7;text-transform:uppercase;}
+.stamp b{color:var(--dye-onionskin);font-weight:600;}
+
+.thesis{font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1.45;
+  color:var(--paper);max-width:760px;margin:22px 0 30px;}
+.thesis em{color:var(--dye-onionskin);font-style:italic;}
+
+/* ---------- main split: card stage + spec rail ---------- */
+.stage-row{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:30px;align-items:start;}
+@media (max-width:780px){.stage-row{grid-template-columns:1fr;}}
+
+/* the case that holds the jewel — dyed card stock */
+.case{position:relative;border-radius:14px;padding:34px 26px 30px;overflow:hidden;
+  background:linear-gradient(180deg,#71513a,var(--dye-kakishibu) 60%,#5b3e2a);
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.7), inset 0 0 0 1px rgba(0,0,0,.25);}
+.case .deckle{position:absolute;inset:8px;border:1px solid rgba(230,221,201,.18);border-radius:9px;pointer-events:none;}
+.case-label{font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--dye-oat);opacity:.7;text-align:center;margin-bottom:18px;}
+.case-foot{font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dye-oat);opacity:.55;text-align:center;margin-top:20px;}
+
+/* ===================================================================
+   THE OBJECT — one tessera, faithful 300×420, allowed to scream.
+   Holo = layered gradients, color-dodge, seamless tiling (bg larger
+   than box, centred bounded position). Mirrors the app's technique.
+   =================================================================== */
+.scene{perspective:1100px;display:flex;justify-content:center;}
+.card{
+  --p-bg1:#F2C200; --p-bg2:#E0A800; --p-ink:#16100A; --p-soft:#7a5a12;
+  --p-line:#16100A; --p-accent:#D11; --p-accent2:#16100A;
+  --p-display:'Anton',sans-serif; --p-body:'Inter',sans-serif;
+  position:relative;width:300px;height:420px;border-radius:18px;cursor:grab;
+  transform-style:preserve-3d;transition:transform .12s ease-out;
+  box-shadow:0 30px 50px -18px rgba(0,0,0,.65);
+}
+.card:active{cursor:grabbing;}
+.front{position:absolute;inset:0;border-radius:18px;overflow:hidden;backface-visibility:hidden;
+  background:var(--p-bg1);display:flex;flex-direction:column;align-items:center;
+  padding:18px 16px;color:var(--p-ink);}
+.f-tex{position:absolute;inset:0;pointer-events:none;
+  opacity:.22;background-image:radial-gradient(var(--p-ink) 1px,transparent 1.4px);background-size:6px 6px;}
+.f-frame{position:absolute;inset:14px;border:3px solid var(--p-line);border-radius:11px;pointer-events:none;}
+.f-frame2{position:absolute;inset:20px;border:1px solid var(--p-line);border-radius:8px;opacity:.4;pointer-events:none;}
+.f-hero-art{position:absolute;left:0;right:0;top:35%;bottom:8%;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
+.f-hero-art img{max-width:58%;max-height:100%;object-fit:contain;filter:drop-shadow(2px 3px 0 rgba(0,0,0,.25));}
+
+.f-top{display:flex;justify-content:space-between;width:100%;z-index:2;align-items:flex-start;}
+.f-presence{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;}
+.f-edition{font-size:9px;letter-spacing:1.5px;color:var(--p-soft);text-align:right;}
+.f-rule{width:78%;height:2px;background:var(--p-line);margin:8px 0;z-index:2;}
+.f-name{font-family:var(--p-display);color:var(--p-ink);text-align:center;line-height:.9;
+  font-size:52px;text-transform:uppercase;z-index:2;letter-spacing:.01em;}
+.f-event{font-family:var(--p-body);font-weight:800;text-transform:uppercase;text-align:center;
+  color:var(--p-accent);font-size:13px;line-height:1.2;letter-spacing:2px;z-index:2;margin-top:4px;}
+.f-loc{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;z-index:2;margin-top:auto;}
+.f-date{font-size:10px;letter-spacing:2.5px;color:var(--p-ink);opacity:.85;z-index:2;margin-top:4px;}
+.f-tag{font-family:var(--p-display);font-style:italic;font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;}
+.f-spacer{flex:1;}
+
+/* ---- holo stack (the only loud color in the whole document) ---- */
+.holo{position:absolute;inset:0;border-radius:18px;pointer-events:none;mix-blend-mode:color-dodge;}
+.holo-rainbow{
+  background:linear-gradient(115deg,
+    #00e5ff,#b6ff00,#ffe600,#ff2d9b,#7a5cff,#00e5ff);
+  background-size:300% 300%;opacity:.5;}
+.holo-prism{
+  background:repeating-linear-gradient(70deg,
+    rgba(255,0,128,.55) 0 12px, rgba(0,229,255,.55) 12px 24px,
+    rgba(182,255,0,.5) 24px 36px, rgba(122,92,255,.55) 36px 48px,
+    rgba(255,0,128,.55) 48px 60px);
+  background-size:300% 300%;opacity:.32;}
+.holo-sparkle{mix-blend-mode:screen;opacity:.5;
+  background-image:radial-gradient(rgba(255,255,255,.9) 1px, transparent 1.6px);
+  background-size:34px 34px;}
+.holo-glare{mix-blend-mode:soft-light;
+  background:radial-gradient(circle at var(--gx,50%) var(--gy,40%),
+    rgba(255,255,255,.55), rgba(255,255,255,.06) 38%, transparent 60%);opacity:.4;}
+/* the single CRT wink — only on the focused card */
+.crt{position:absolute;inset:0;border-radius:18px;pointer-events:none;mix-blend-mode:overlay;opacity:.0;
+  transition:opacity .5s;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.5) 0 1px, transparent 1px 3px);}
+.scene:hover .crt, .card.lit .crt{opacity:.18;}
+
+.hint{font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--dye-oat);opacity:.5;text-align:center;margin-top:14px;}
+
+/* ---------- spec rail ---------- */
+.rail{display:flex;flex-direction:column;gap:24px;}
+.panel{position:relative;border-radius:12px;padding:20px 20px 22px;overflow:hidden;
+  background:var(--dye-oat);color:var(--ink);
+  box-shadow:0 14px 30px -16px rgba(0,0,0,.6);}
+.panel h2{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;
+  font-size:15px;letter-spacing:.06em;margin:0 0 14px;color:var(--dye-walnut);
+  border-bottom:1px solid var(--hair);padding-bottom:8px;}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sw{border-radius:7px;height:62px;position:relative;overflow:hidden;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);display:flex;align-items:flex-end;}
+.sw span{font-family:ui-monospace,Menlo,monospace;font-size:8px;letter-spacing:.04em;
+  padding:4px 5px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);line-height:1.25;}
+.sw.dark span{color:#fff;} .sw.light span{color:#2a2118;text-shadow:none;}
+
+.loud-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px;}
+.loud{height:34px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18);}
+.cap{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--dye-kakishibu);margin:14px 0 4px;opacity:.8;}
+
+/* type specimens */
+.spec-display{font-family:'Anton',sans-serif;font-size:34px;line-height:.9;text-transform:uppercase;
+  color:var(--dye-walnut);}
+.spec-serif{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--dye-walnut);margin-top:6px;}
+.spec-serif i{color:var(--dye-madder);}
+.spec-body{font-family:'Inter',sans-serif;font-size:13px;color:#5a4a3a;margin-top:8px;line-height:1.5;}
+.spec-mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.14em;
+  color:var(--dye-kakishibu);margin-top:8px;text-transform:uppercase;}
+
+/* ---------- gallery contact strip (flat — invariant 1) ---------- */
+.gallery{margin-top:42px;}
+.gallery h2{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;font-size:16px;
+  letter-spacing:.08em;color:var(--dye-oat);margin:0 0 4px;}
+.gallery .note{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--dye-onionskin);
+  margin:0 0 18px;font-size:15px;}
+.strip{display:flex;gap:18px;flex-wrap:wrap;}
+.thumb{width:150px;height:210px;border-radius:9px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;align-items:center;padding:12px 10px;
+  box-shadow:0 10px 22px -12px rgba(0,0,0,.7);}
+.thumb .tn{font-family:'Anton',sans-serif;text-transform:uppercase;line-height:.88;text-align:center;margin-top:auto;}
+.thumb .te{font-family:'Inter',sans-serif;font-weight:800;text-transform:uppercase;font-size:8px;letter-spacing:1.5px;margin-top:4px;}
+.thumb .tl{font-family:'Inter',sans-serif;font-size:6.5px;letter-spacing:3px;text-transform:uppercase;margin-top:auto;opacity:.7;}
+.thumb .thair{width:70%;height:1px;margin:7px 0;}
+/* Hanuman thumb (loud) */
+.t-hanuman{background:#F2C200;color:#16100A;border:2px solid #16100A;}
+.t-hanuman .tn{font-size:30px;color:#16100A;} .t-hanuman .te{color:#D11;} .t-hanuman .thair{background:#16100A;}
+.t-hanuman .tex{position:absolute;inset:0;opacity:.18;background-image:radial-gradient(#16100A 1px,transparent 1.3px);background-size:6px 6px;}
+/* Icelandic bar thumb (cozy) */
+.t-iceland{background:linear-gradient(180deg,#241a12,#3a2a1c);color:#e8dcc4;border:1px solid rgba(201,161,91,.4);}
+.t-iceland .tn{font-family:'Cormorant Garamond',serif;font-size:26px;color:#e8dcc4;}
+.t-iceland .te{color:#d8a24a;font-weight:600;}.t-iceland .thair{background:rgba(201,161,91,.5);}
+.t-iceland .dot{position:absolute;top:16px;left:0;right:0;display:flex;justify-content:center;gap:9px;}
+.t-iceland .dot i{width:6px;height:6px;border-radius:50%;display:block;box-shadow:0 0 5px currentColor;}
+/* Institut thumb (romantic-industrial) */
+.t-institut{background:linear-gradient(170deg,#7a4a3a 0%,#5a3327 55%,#241a14 100%);color:#f0d9b0;border:1px solid rgba(201,161,91,.35);}
+.t-institut .tn{font-size:21px;color:#f0d9b0;letter-spacing:.04em;}
+.t-institut .te{color:#e0a85a;}.t-institut .thair{background:rgba(224,168,90,.5);}
+.t-institut .win{position:absolute;top:40px;left:50%;transform:translateX(-50%);width:26px;height:46px;border-radius:3px 3px 0 0;
+  background:linear-gradient(180deg,#ffd98a,#e0a85a);box-shadow:0 0 22px 6px rgba(224,168,90,.55);opacity:.9;}
+
+.disclaimer{margin-top:40px;padding-top:18px;border-top:1px solid var(--hair);
+  font-family:ui-monospace,Menlo,monospace;font-size:9.5px;letter-spacing:.1em;line-height:1.8;
+  color:var(--dye-clay);text-transform:uppercase;}
+
+@media (prefers-reduced-motion:reduce){
+  .card{transition:none!important;}
+  .holo-rainbow,.holo-prism,.holo-sparkle{background-position:50% 50%!important;}
+  .crt{display:none!important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <h1>Glyph</h1>
+      <div class="sub">Tessera — the verified place, carried like contraband</div>
+    </div>
+    <div class="stamp">
+      Style Tile · v0.1<br>
+      <b>Loud object</b> / quiet vessel<br>
+      Berlin field set · 2026
+    </div>
+  </header>
+
+  <p class="thesis">
+    The card is allowed to <em>scream</em>. Everything around it is not.
+    A tessera is an 80s trading-card object — chrome, prism, scanline — set inside
+    a hand-dyed, risograph vessel. The restraint of the case is what makes the
+    jewel <em>glow like contraband</em>.
+  </p>
+
+  <div class="stage-row">
+
+    <!-- THE CASE + OBJECT -->
+    <section class="case grain">
+      <div class="deckle"></div>
+      <div class="case-label">— focus view · one card at a time —</div>
+      <div class="scene">
+        <div class="card lit" id="card" data-bg="halftone">
+          <div class="front">
+            <div class="f-tex"></div>
+            <div class="f-top">
+              <div class="f-presence">Verified Presence</div>
+              <div class="f-edition">№ 001 / 100</div>
+            </div>
+            <div class="f-rule"></div>
+            <div class="f-name">Hanuman</div>
+            <div class="f-event">Kitchen Session · 1 Yr</div>
+            <div class="f-hero-art"><img src="hero-hanuman.svg" alt="Hanuman emblem"></div>
+            <div class="f-spacer"></div>
+            <div class="f-loc">Neukölln · Berlin</div>
+            <div class="f-date">01 · VI · 2026</div>
+            <div class="f-tag">loud, by design</div>
+            <div class="f-frame"></div>
+            <div class="f-frame2"></div>
+          </div>
+          <div class="holo holo-rainbow"></div>
+          <div class="holo holo-prism"></div>
+          <div class="holo holo-sparkle"></div>
+          <div class="holo holo-glare"></div>
+          <div class="crt"></div>
+        </div>
+      </div>
+      <div class="hint">move your pointer over the card — tilt + holo are live</div>
+      <div class="case-foot">back face + guilloché seal stay constant · the house hand</div>
+    </section>
+
+    <!-- SPEC RAIL -->
+    <div class="rail">
+
+      <section class="panel grain">
+        <h2>The Vessel — naturally-dyed earth</h2>
+        <div class="swatches">
+          <div class="sw dark" style="background:#29333f"><span>indigo<br>#29333F</span></div>
+          <div class="sw dark" style="background:#6b4a32"><span>kakishibu<br>#6B4A32</span></div>
+          <div class="sw dark" style="background:#8a3a32"><span>madder<br>#8A3A32</span></div>
+          <div class="sw dark" style="background:#3b3027"><span>walnut<br>#3B3027</span></div>
+          <div class="sw dark" style="background:#c9a15b"><span>onionskin<br>#C9A15B</span></div>
+          <div class="sw light" style="background:#e6ddc9"><span>oat<br>#E6DDC9</span></div>
+          <div class="sw dark" style="background:#b08463"><span>clay<br>#B08463</span></div>
+          <div class="sw dark" style="background:#7c8268"><span>sage<br>#7C8268</span></div>
+        </div>
+        <div class="cap">The Object — holo scream (foil layers only)</div>
+        <div class="loud-row">
+          <div class="loud" style="background:linear-gradient(115deg,#00e5ff,#b6ff00,#ffe600,#ff2d9b,#7a5cff)"></div>
+          <div class="loud" style="background:#00e5ff"></div>
+          <div class="loud" style="background:#ff2d9b"></div>
+          <div class="loud" style="background:#b6ff00"></div>
+          <div class="loud" style="background:linear-gradient(90deg,#fff,#9aa2ad,#fff)"></div>
+        </div>
+      </section>
+
+      <section class="panel grain">
+        <h2>Three Voices</h2>
+        <div class="spec-display">Anton — the loud display</div>
+        <div class="spec-serif">Cormorant — <i>the quiet serif</i></div>
+        <div class="spec-body">Inter carries the controls and labels — the neutral workhorse that never competes with the foil.</div>
+        <div class="spec-mono">MONO · ED №001 · 52°29′N 13°25′E · 01·VI·2026</div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- GALLERY CONTACT STRIP -->
+  <section class="gallery">
+    <h2>Gallery — pressed specimens</h2>
+    <p class="note">flat dyed-paper thumbnails · no holo, no 3D · the scream is rationed to the one focused card</p>
+    <div class="strip">
+
+      <div class="thumb t-hanuman">
+        <div class="tex"></div>
+        <div class="te" style="align-self:flex-start;opacity:.7">№001/100</div>
+        <div class="tn">Hanuman</div>
+        <div class="te">Kitchen Session</div>
+        <div class="thair"></div>
+        <div class="tl">Neukölln · Berlin</div>
+      </div>
+
+      <div class="thumb t-iceland">
+        <div class="dot"><i style="background:#d4452f;color:#d4452f"></i><i style="background:#e0a85a;color:#e0a85a"></i><i style="background:#7c8268;color:#7c8268"></i></div>
+        <div class="tn">Ísbar</div>
+        <div class="te">Lunch Service</div>
+        <div class="thair"></div>
+        <div class="tl">Prenzlauer Berg</div>
+      </div>
+
+      <div class="thumb t-institut">
+        <div class="win"></div>
+        <div class="tn">Schuh<br>Reparaturen</div>
+        <div class="te">After Hours</div>
+        <div class="thair"></div>
+        <div class="tl">Südwest · Berlin</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    Probe only — not the shipping app · honors CLAUDE.md: self-hosted fonts, no network,
+    flat holo-free gallery, constant seal, seamless holo, event ≤ name.
+  </div>
+
+</div>
+
+<script>
+/* live tilt + holo position on the focused card (the one allowed to move fast) */
+(function(){
+  var card = document.getElementById('card');
+  var scene = card.parentElement;
+  var rainbow = card.querySelector('.holo-rainbow');
+  var prism = card.querySelector('.holo-prism');
+  var sparkle = card.querySelector('.holo-sparkle');
+  var glare = card.querySelector('.holo-glare');
+  var reduce = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+  function move(e){
+    var r = card.getBoundingClientRect();
+    var px = (e.clientX - r.left)/r.width;   // 0..1
+    var py = (e.clientY - r.top)/r.height;
+    var rx = (0.5 - py)*16;                    // tilt
+    var ry = (px - 0.5)*16;
+    if(!reduce) card.style.transform = 'rotateX('+rx+'deg) rotateY('+ry+'deg)';
+    // seamless: keep position centred & bounded (size > box) so the sampled
+    // window never crosses the gradient's repeat boundary
+    var bx = 50 + (px-0.5)*60, by = 50 + (py-0.5)*60;
+    if(!reduce){
+      rainbow.style.backgroundPosition = bx+'% '+by+'%';
+      prism.style.backgroundPosition = (100-bx)+'% '+(100-by)+'%';
+      sparkle.style.backgroundPosition = bx+'% '+by+'%';
+    }
+    glare.style.setProperty('--gx', (px*100)+'%');
+    glare.style.setProperty('--gy', (py*100)+'%');
+  }
+  function reset(){ card.style.transform=''; }
+  scene.addEventListener('pointermove', move);
+  scene.addEventListener('pointerleave', reset);
+})();
+</script>
+</body>
+</html>

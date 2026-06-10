@@ -1,0 +1,247 @@
+// Tessera platform — data model.
+//
+// Scaling notes baked into the schema:
+//  - `directUrl` lets `prisma migrate` bypass the connection pooler while the app
+//    runs through PgBouncer (required for serverless at scale).
+//  - Every hot lookup (tapSlug, slugs, ownership) is uniquely indexed.
+//  - Mint scarcity is enforced at the DB layer by @@unique([editionId, serial]) —
+//    even if two taps race, the second insert fails and we retry the next serial.
+//  - Theme/design payloads live in JSONB so the front-end's data-driven theme
+//    engine (ported from the static app) round-trips without a migration per tweak.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------------------------------------------------------
+// Auth.js (NextAuth) core tables
+// ----------------------------------------------------------------------------
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+
+  accounts Account[]
+  sessions Session[]
+  venues   Venue[]
+  designs  Design[]
+  claims   Claim[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ----------------------------------------------------------------------------
+// Domain
+// ----------------------------------------------------------------------------
+
+/// A real-world venue. Must be VERIFIED before its editions can go LIVE — that
+/// verification IS the product promise ("verified real-world presence").
+model Venue {
+  id        String      @id @default(cuid())
+  ownerId   String
+  slug      String      @unique
+  name      String
+  location  String?
+  city      String?
+  country   String?
+  // Optional geofence — taps can be required to originate near here (anti-fraud).
+  lat       Float?
+  lng       Float?
+  status    VenueStatus @default(UNVERIFIED)
+  verifiedAt DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  owner         User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  designs       Design[]
+  editions      Edition[]
+  verifications VenueVerification[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+/// Verification workflow record (evidence + reviewer decision). Auditable.
+model VenueVerification {
+  id          String             @id @default(cuid())
+  venueId     String
+  method      VerificationMethod
+  evidenceUrl String?
+  note        String?
+  decision    VenueStatus        @default(PENDING)
+  reviewedBy  String?
+  createdAt   DateTime           @default(now())
+
+  venue Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+
+  @@index([venueId])
+}
+
+/// The artwork: a Tessera design. `theme` and the text fields map 1:1 to the
+/// front-end's `currentDesign` object (ported from the static app). A design can
+/// be authored standalone and later attached to a venue.
+model Design {
+  id          String  @id @default(cuid())
+  ownerId     String
+  venueId     String?
+  venueName   String  @default("")
+  eventLine   String  @default("")
+  location    String  @default("")
+  date        String  @default("")
+  edition     String  @default("")
+  tagline     String  @default("")
+  rarity      Rarity  @default(HOLO)
+  // Object-storage keys (NOT data URLs) — resized + re-encoded on upload.
+  logoKey     String?
+  heroArtKey  String?
+  // Full theme object: colors / fonts / background / frame / heroArt / rarities.
+  theme       Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  venue    Venue?    @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  editions Edition[]
+
+  @@index([ownerId])
+  @@index([venueId])
+}
+
+/// A mintable run of a Design at a Venue. The physical NFC tag / QR at the venue
+/// resolves to /t/{tapSlug}. Scarcity = maxSupply; mintedCount is the issued count.
+model Edition {
+  id          String        @id @default(cuid())
+  venueId     String
+  designId    String
+  tapSlug     String        @unique // short public token printed on the NFC tag / QR
+  rarity      Rarity
+  maxSupply   Int? // null = open edition
+  mintedCount Int           @default(0)
+  status      EditionStatus @default(DRAFT)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  // If true, a claim requires the tapper to be within Venue geofence radius.
+  requireGeo  Boolean       @default(false)
+  geoRadiusM  Int           @default(150)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  venue  Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  design Design @relation(fields: [designId], references: [id], onDelete: Restrict)
+  claims Claim[]
+
+  @@index([venueId])
+  @@index([designId])
+  @@index([status])
+}
+
+/// One issued, owned Tessera. serial is unique within an edition (the scarcity
+/// guarantee). A user may hold at most one of a given edition.
+model Claim {
+  id         String      @id @default(cuid())
+  editionId  String
+  ownerId    String?
+  serial     Int
+  // Stable public token for sharing a single owned card: /c/{claimToken}.
+  claimToken String      @unique @default(cuid())
+  status     ClaimStatus @default(CLAIMED)
+  // Anti-fraud / analytics context captured at tap time.
+  tapLat     Float?
+  tapLng     Float?
+  deviceHash String?
+  claimedAt  DateTime    @default(now())
+
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  owner   User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([editionId, serial]) // DB-enforced scarcity (race-safe)
+  @@unique([editionId, ownerId]) // one card per collector per edition
+  @@index([ownerId])
+  @@index([editionId])
+}
+
+// ----------------------------------------------------------------------------
+// Enums
+// ----------------------------------------------------------------------------
+enum UserRole {
+  USER
+  VENUE_OWNER
+  ADMIN
+}
+
+enum VenueStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum VerificationMethod {
+  MANUAL_REVIEW
+  POSTCARD_CODE
+  GEO_CHECKIN
+  PARTNER_API
+}
+
+enum EditionStatus {
+  DRAFT
+  LIVE
+  PAUSED
+  ENDED
+}
+
+enum Rarity {
+  COMMON
+  HOLO
+  REVERSE
+  PRISMATIC
+  GOLD
+}
+
+enum ClaimStatus {
+  CLAIMED
+  REVOKED
+}

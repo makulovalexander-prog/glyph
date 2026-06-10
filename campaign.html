@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0c10">
+<title>Glyph — Proof you were really there</title>
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* ============ VESSEL — quiet dark room (engineering floor + creative direction) ============ */
+@property --mx{syntax:'<percentage>';inherits:true;initial-value:50%;}
+@property --my{syntax:'<percentage>';inherits:true;initial-value:50%;}
+@property --glare{syntax:'<number>';inherits:true;initial-value:0.22;}
+:root{
+  --bg:#0a0c10; --panel:#14171d; --panel-2:#1b1f27;
+  --line:rgba(255,255,255,.08); --ink:#eceef2; --soft:#9aa0ab;
+  --accent:#8b8cf0; --accent-ink:#0b0c14;
+  --grad1:#161a2e; --grad2:#241a30; --grad3:#122428;
+  --cs:1;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:-20% -10%;z-index:0;pointer-events:none;filter:blur(60px);opacity:.55;
+  background:radial-gradient(38% 32% at 18% 12%, var(--grad1), transparent 70%),
+             radial-gradient(42% 36% at 88% 8%, var(--grad2), transparent 70%),
+             radial-gradient(50% 40% at 60% 100%, var(--grad3), transparent 72%);
+  animation:ambientDrift 32s ease-in-out infinite alternate;}
+@keyframes ambientDrift{from{transform:translate3d(-2%,-1%,0) scale(1);}to{transform:translate3d(2%,2%,0) scale(1.08);}}
+body::after{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.025;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");}
+main{position:relative;z-index:2;}
+section{max-width:1040px;margin:0 auto;padding:96px max(24px,env(safe-area-inset-right)) 96px max(24px,env(safe-area-inset-left));}
+.kicker{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--soft);margin-bottom:18px;}
+h1,h2{font-weight:600;letter-spacing:-.01em;line-height:1.12;}
+h1{font-size:clamp(40px,7vw,76px);max-width:14ch;}
+h2{font-size:clamp(26px,4vw,40px);max-width:22ch;margin-bottom:14px;}
+.lede{font-size:clamp(16px,2vw,19px);color:var(--soft);max-width:54ch;margin-top:22px;}
+.lede b{color:var(--ink);font-weight:600;}
+a{color:var(--accent);}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;max-width:1040px;margin:0 auto;
+  padding:22px max(24px,env(safe-area-inset-right)) 0 max(24px,env(safe-area-inset-left));position:relative;z-index:2;}
+.wordmark{font-family:'Anton',sans-serif;font-size:19px;letter-spacing:5px;color:var(--ink);text-decoration:none;}
+.top-nav{display:flex;gap:18px;}
+.top-nav a{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--soft);text-decoration:none;transition:color .15s;}
+.top-nav a:hover{color:var(--ink);}
+
+/* hero */
+.hero{padding-top:13vh;padding-bottom:60px;min-height:78vh;display:flex;flex-direction:column;justify-content:center;}
+.scroll-cue{margin-top:54px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--soft);opacity:.8;
+  display:inline-flex;align-items:center;gap:10px;text-decoration:none;}
+.scroll-cue::after{content:"↓";animation:cueBob 2.4s ease-in-out infinite;}
+@keyframes cueBob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+/* steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:44px;}
+.step{background:var(--panel);border:0.5px solid var(--line);border-radius:16px;padding:24px;}
+.step .n{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--accent);line-height:1;}
+.step h3{font-size:15px;margin:12px 0 6px;font-weight:600;}
+.step p{font-size:13.5px;color:var(--soft);}
+@media(max-width:760px){.steps{grid-template-columns:1fr;}}
+
+/* ============ THE TAP DEMO ============ */
+.demo-wrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:48px;align-items:center;margin-top:30px;}
+@media(max-width:880px){.demo-wrap{grid-template-columns:1fr;justify-items:center;}}
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+  background:radial-gradient(circle at 50% 30%, rgba(22,26,46,.55) 0%, rgba(10,12,16,0) 70%);
+  border:1px solid var(--line);border-radius:22px;padding:46px 30px 34px;min-height:600px;width:min(420px,92vw);}
+/* the tap point */
+.tappoint{display:flex;flex-direction:column;align-items:center;gap:20px;transition:opacity .4s, transform .4s;}
+.tappoint.gone{opacity:0;transform:scale(.92);pointer-events:none;position:absolute;}
+.puck{position:relative;width:120px;height:120px;border-radius:50%;cursor:pointer;border:0;background:
+  radial-gradient(circle at 50% 42%, #1d2130, #0d0f16 72%);
+  box-shadow:0 18px 44px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.07);}
+.puck::before{content:"";position:absolute;inset:14px;border-radius:50%;border:1px solid rgba(139,140,240,.4);}
+.puck::after{content:"✦";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:30px;color:var(--accent);}
+.puck .ring{position:absolute;inset:-2px;border-radius:50%;border:1px solid rgba(139,140,240,.45);
+  animation:tapPulse 2.6s ease-out infinite;pointer-events:none;}
+@keyframes tapPulse{0%{transform:scale(.92);opacity:.7}70%{transform:scale(1.45);opacity:0}100%{opacity:0}}
+.puck.rippling .ring{animation:tapRipple .65s ease-out 3;}
+@keyframes tapRipple{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.9);opacity:0}}
+.tap-label{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--soft);text-align:center;}
+.tap-venue-pick{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.vbtn{background:var(--panel);border:0.5px solid var(--line);border-radius:999px;padding:8px 14px;color:var(--soft);
+  font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;font-family:inherit;transition:all .15s;}
+.vbtn:hover{border-color:var(--accent);color:var(--ink);}
+.vbtn.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600;}
+
+/* card reveal */
+.reveal{display:none;flex-direction:column;align-items:center;gap:22px;}
+.reveal.on{display:flex;}
+.scene{perspective:1300px;width:300px;height:420px;touch-action:none;transform:scale(var(--cs,1));transform-origin:top center;
+  margin:calc(-420px*(1 - var(--cs,1))) calc(-150px*(1 - var(--cs,1))) calc(-420px*(1 - var(--cs,1)));}
+.scene.entering .card{animation:cardEnter .9s cubic-bezier(.2,.9,.25,1.2) both;}
+@keyframes cardEnter{0%{transform:rotateX(40deg) rotateY(-30deg) translateY(70px) scale(.6);opacity:0;}
+  60%{opacity:1;}100%{transform:rotateX(8deg) rotateY(-14deg) translateY(0) scale(1);opacity:1;}}
+.serial-line{font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:2px;color:var(--soft);}
+.serial-line b{color:var(--ink);font-weight:600;}
+.reveal-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.sbtn{background:var(--panel);border:0.5px solid var(--line);border-radius:999px;padding:9px 18px;color:var(--ink);
+  font-size:11px;letter-spacing:1.5px;cursor:pointer;font-family:inherit;text-transform:uppercase;transition:all .15s;}
+.sbtn:hover{border-color:var(--accent);}
+.sbtn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600;}
+.sbtn:active{transform:translateY(1px);}
+.stage-hint{font-size:11px;color:var(--soft);letter-spacing:1px;opacity:.75;}
+
+/* collection shelf */
+.shelf{width:min(420px,92vw);}
+.shelf h3{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--soft);font-weight:500;margin-bottom:14px;}
+.shelf-row{display:flex;gap:14px;flex-wrap:wrap;min-height:130px;}
+.shelf-slot{width:84px;height:118px;border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;
+  color:var(--soft);font-size:18px;opacity:.5;}
+.shelf-thumb{position:relative;width:84px;height:118px;border-radius:8px;overflow:hidden;border:0.5px solid var(--line);
+  background:#0A0A0C;animation:shelfIn .5s ease both;}
+@keyframes shelfIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.shelf-thumb .mini{position:absolute;top:0;left:0;width:300px;height:420px;transform:scale(.28);transform-origin:top left;pointer-events:none;}
+.shelf-note{font-size:12px;color:var(--soft);margin-top:14px;max-width:40ch;}
+
+/* ============ THE CARD (ported engine — identity via CSS vars per card) ============ */
+.card{position:relative;width:300px;height:420px;transform-style:preserve-3d;
+  transform:rotateX(var(--rx,8deg)) rotateY(var(--ry,-14deg));
+  transition:transform .12s ease-out, --mx .18s ease-out, --my .18s ease-out, --glare .18s ease-out;
+  cursor:grab;touch-action:none;
+  --p-bg1:#0e1116;--p-bg2:#06080b;--p-ink:#eceef2;--p-soft:#9aa0ab;--p-line:#3a3f4a;
+  --p-accent:#8b8cf0;--p-display:'Cormorant Garamond',Georgia,serif;--p-body:'Inter',system-ui,sans-serif;
+  --p-tag-style:italic;--p-frame-w:1px;--p-frame-r:11px;}
+.card:active{cursor:grabbing;}
+.face{position:absolute;inset:0;border-radius:18px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  box-shadow:0 30px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);}
+.front{background:var(--p-bg1);display:flex;flex-direction:column;align-items:center;padding:22px 20px 18px;}
+.card[data-bg="gradient"] .front{background:linear-gradient(155deg,var(--p-bg1),var(--p-bg2));}
+.f-tex{position:absolute;inset:0;opacity:0;pointer-events:none;}
+.card[data-bg="gradient"] .f-tex{opacity:.04;background:repeating-linear-gradient(45deg,var(--p-line) 0 1px,transparent 1px 14px);}
+.card[data-bg="halftone"] .f-tex{opacity:.22;background-image:radial-gradient(var(--p-ink) 1px,transparent 1.4px);background-size:6px 6px;}
+.f-frame{position:absolute;inset:14px;border:var(--p-frame-w) solid var(--p-line);border-radius:var(--p-frame-r);opacity:.7;pointer-events:none;}
+.f-frame2{position:absolute;inset:20px;border:0.5px solid var(--p-line);border-radius:calc(var(--p-frame-r) - 3px);opacity:.28;pointer-events:none;}
+.f-hero-art{position:absolute;left:0;right:0;top:36%;bottom:3%;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
+.f-hero-art img{max-width:56%;max-height:100%;object-fit:contain;}
+.f-glow{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.85;}
+.f-top{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:2;margin-top:4px;flex:none;}
+.f-presence{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;}
+.f-edition{font-size:9px;letter-spacing:1.5px;color:var(--p-soft);}
+.f-rule{width:78%;height:0.5px;background:linear-gradient(90deg,transparent,var(--p-line),transparent);margin:8px 0;opacity:.6;z-index:2;flex:none;}
+.f-hero{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;z-index:2;min-height:0;gap:10px;}
+.f-name{font-family:var(--p-display);color:var(--p-ink);font-weight:500;text-align:center;line-height:1.04;max-width:92%;overflow-wrap:anywhere;}
+.f-event{font-family:var(--p-body);font-weight:600;text-transform:uppercase;text-align:center;color:var(--p-accent);max-width:84%;line-height:1.25;letter-spacing:2px;z-index:2;font-size:11px;}
+.f-loc{font-size:8px;letter-spacing:4px;color:var(--p-soft);text-transform:uppercase;z-index:2;flex:none;max-width:92%;text-align:center;}
+.f-date{font-size:10px;letter-spacing:2.5px;color:var(--p-ink);opacity:.85;z-index:2;margin-top:2px;flex:none;}
+.f-tag{font-family:var(--p-display);font-style:var(--p-tag-style);font-size:13px;color:var(--p-soft);z-index:2;margin-top:4px;min-height:16px;flex:none;max-width:80%;text-align:center;line-height:1.2;}
+.back{transform:rotateY(180deg);background:linear-gradient(155deg,#0f1320,#070a0d);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.b-guilloche{position:absolute;inset:0;opacity:.5;pointer-events:none;background:
+  repeating-radial-gradient(circle at 50% 42%, transparent 0 7px, rgba(160,170,210,.07) 7px 8px),
+  conic-gradient(from 0deg at 50% 42%, rgba(160,170,210,.05), transparent 12%, rgba(160,170,210,.05) 24%, transparent 36%, rgba(160,170,210,.05) 48%, transparent 60%, rgba(160,170,210,.05) 72%, transparent 84%, rgba(160,170,210,.05) 100%);}
+.b-frame{position:absolute;inset:14px;border:1px solid rgba(255,255,255,.14);border-radius:11px;pointer-events:none;}
+.b-emblem{width:96px;height:96px;border-radius:50%;border:1px solid rgba(200,206,230,.5);display:flex;align-items:center;justify-content:center;z-index:2;margin-bottom:20px;position:relative;}
+.b-emblem::before{content:"";position:absolute;inset:7px;border:0.5px solid rgba(200,206,230,.3);border-radius:50%;}
+.b-emblem span{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--accent);}
+.b-word{font-family:'Anton',sans-serif;font-size:26px;letter-spacing:8px;color:var(--accent);z-index:2;}
+.b-sub{font-size:8px;letter-spacing:5px;color:var(--soft);text-transform:uppercase;z-index:2;margin-top:10px;}
+.b-foot{position:absolute;bottom:26px;font-size:7.5px;letter-spacing:3px;color:var(--soft);text-transform:uppercase;z-index:2;opacity:.7;}
+/* holo layers (proven seamless mechanics: 300% tile, bounded centred slide) */
+.holo{position:absolute;inset:0;border-radius:18px;pointer-events:none;mix-blend-mode:color-dodge;opacity:0;transition:opacity .2s;}
+.holo-rainbow{background:repeating-linear-gradient(110deg,#00e5ff 0%,#7a3cff 10%,#ff2d9b 20%,#ff8a00 30%,#b6ff00 40%,#00e5ff 50%);
+  background-size:300% 300%;background-position:calc(50% + (var(--mx,50%) - 50%)*0.8) calc(50% + (var(--my,50%) - 50%)*0.8);
+  filter:brightness(.85) contrast(1.5) saturate(1.3);}
+.holo-gold{background:repeating-linear-gradient(110deg,#6b4e1e 0%,#f6d889 10%,#b8893a 20%,#ffe9a8 30%,#8a6526 40%,#6b4e1e 50%);
+  background-size:300% 300%;background-position:calc(50% + (var(--mx,50%) - 50%)*0.8) calc(50% + (var(--my,50%) - 50%)*0.8);
+  filter:brightness(.9) contrast(1.4);}
+.holo-sparkle{mix-blend-mode:screen;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 9 -5'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:160px 160px;background-position:var(--mx,50%) var(--my,50%);opacity:0;}
+.holo-glare{mix-blend-mode:soft-light;background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), rgba(255,255,255,.05) 38%, transparent 60%);opacity:var(--glare,.25);}
+.card.live .holo-rainbow{opacity:.55;}
+.card.live .holo-sparkle{opacity:.5;}
+.card.live.gold .holo-rainbow{opacity:0;}
+.card.live.gold .holo-gold{opacity:.6;}
+/* CRT wink — the "pick it up" beat, card-focus reveal ONLY */
+.crt{position:absolute;inset:0;border-radius:18px;pointer-events:none;z-index:5;opacity:0;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.12) 0 1px, transparent 1px 3px);mix-blend-mode:overlay;}
+.scene.entering .crt{animation:crtWink .9s ease-out both;}
+@keyframes crtWink{0%{opacity:.9;}55%{opacity:.5;}100%{opacity:0;}}
+.scene.entering .face{animation:bloomIn .9s ease-out both;}
+@keyframes bloomIn{0%{filter:brightness(2.4) saturate(1.6);}100%{filter:none;}}
+
+/* ============ GREETINGS FROM — postcard gallery (cheap tiles; heavy only in focus) ============ */
+.postcards{display:flex;gap:26px;flex-wrap:wrap;margin-top:40px;}
+.postcard{background:var(--panel);border:0.5px solid var(--line);border-radius:14px;padding:16px 16px 14px;cursor:pointer;
+  display:flex;flex-direction:column;gap:10px;transition:transform .15s,border-color .15s;font-family:inherit;color:inherit;text-align:left;}
+.postcard:hover{transform:translateY(-3px);border-color:var(--accent);}
+.postcard:active{transform:translateY(-1px);}
+.pc-thumbbox{position:relative;width:210px;height:294px;border-radius:10px;overflow:hidden;background:#0A0A0C;}
+.pc-thumbbox .mini{position:absolute;top:0;left:0;width:300px;height:420px;transform:scale(.7);transform-origin:top left;pointer-events:none;}
+.pc-cap{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;color:var(--soft);}
+.pc-cap b{color:var(--ink);font-weight:600;font-style:normal;}
+.pc-hint{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--soft);opacity:.7;}
+
+/* focus overlay — ONE heavy card at a time (engineering floor) */
+.focus-overlay{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:rgba(8,8,10,.84);-webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);animation:overlayIn .2s ease both;}
+.focus-overlay[hidden]{display:none;}
+@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+.focus-close{position:absolute;top:calc(20px + env(safe-area-inset-top));right:calc(24px + env(safe-area-inset-right));
+  width:38px;height:38px;border-radius:50%;background:var(--panel);border:0.5px solid var(--line);color:var(--ink);
+  font-size:14px;cursor:pointer;font-family:inherit;}
+.focus-close:hover{border-color:var(--accent);}
+.focus-name{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ink);letter-spacing:.5px;}
+.focus-hint{font-size:11px;color:var(--soft);letter-spacing:1px;opacity:.8;}
+
+/* ============ FOR VENUES ============ */
+.venue-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px;}
+@media(max-width:760px){.venue-grid{grid-template-columns:1fr;}}
+.vcard{background:var(--panel);border:0.5px solid var(--line);border-radius:16px;padding:24px;}
+.vcard h3{font-size:15px;font-weight:600;margin-bottom:8px;}
+.vcard p{font-size:13.5px;color:var(--soft);}
+.cta-row{margin-top:44px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.cta{display:inline-block;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:13px 26px;
+  font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:transform .15s;}
+.cta:hover{transform:translateY(-1px);}
+.cta-sub{font-size:12px;color:var(--soft);}
+
+/* footer */
+footer{position:relative;z-index:2;border-top:0.5px solid var(--line);margin-top:40px;}
+.foot-in{max-width:1040px;margin:0 auto;padding:34px 24px 44px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:11px;letter-spacing:1px;color:var(--soft);text-transform:uppercase;}
+
+/* a11y */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ============ REDUCED MOTION — everything freezes, layout reads identically ============ */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+  .holo-rainbow,.holo-gold,.holo-sparkle{background-position:50% 50% !important;}
+  .holo-glare{background:radial-gradient(circle at 50% 50%, rgba(255,255,255,.42), rgba(255,255,255,.05) 38%, transparent 60%) !important;}
+  .scene.entering .face{filter:none !important;}
+  .scene.entering .crt{opacity:0 !important;}
+}
+@media(max-width:370px){:root{--cs:0.9;}}
+@media(max-width:335px){:root{--cs:0.8;}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="wordmark" href="#">GLYPH</a>
+  <nav class="top-nav">
+    <a href="#tap">Try it</a><a href="#greetings">The cards</a><a href="#venues">For venues</a>
+  </nav>
+</div>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="kicker">Glyph · Berlin pilot · 2026</p>
+  <h1>Proof you were really there.</h1>
+  <p class="lede">Glyph lives at the places you love. Tap the point on the counter and the place
+  hands you its card — <b>designed for that exact venue, numbered, yours.</b> You can't buy one.
+  You can't fake one. The only way to get it is to be there.</p>
+  <a class="scroll-cue" href="#tap">Tap one yourself</a>
+</section>
+
+<!-- TAP DEMO -->
+<section id="tap">
+  <p class="kicker">The whole product in one gesture</p>
+  <h2>Stand here. Tap. Keep it forever.</h2>
+  <p class="lede">This is a working simulation of the real thing — pick a venue, tap the point,
+  and pull tonight's card.</p>
+
+  <div class="demo-wrap">
+    <div class="stage" aria-live="polite">
+      <div class="tappoint" id="tappoint">
+        <div class="tap-venue-pick" id="venuePick" role="group" aria-label="Choose a venue"></div>
+        <button class="puck" id="puck" aria-label="Tap to collect this venue's card"><span class="ring"></span></button>
+        <div class="tap-label">Tap the point<br>like you would at the counter</div>
+      </div>
+      <div class="reveal" id="reveal">
+        <div class="scene" id="scene"><!-- card injected here --></div>
+        <div class="serial-line" id="serialLine"></div>
+        <div class="reveal-actions">
+          <button class="sbtn" id="flipBtn">Flip</button>
+          <button class="sbtn primary" id="againBtn">Tap another venue</button>
+        </div>
+        <div class="stage-hint">drag the card — the foil follows the light</div>
+      </div>
+    </div>
+
+    <div class="shelf">
+      <h3>Your collection</h3>
+      <div class="shelf-row" id="shelfRow">
+        <div class="shelf-slot">✦</div><div class="shelf-slot">✦</div><div class="shelf-slot">✦</div>
+      </div>
+      <p class="shelf-note">Every card you pull lands here — a shelf of places that can vouch for you.
+      The collection is the story of where you've actually been.</p>
+    </div>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="n">1</div><h3>Tap</h3><p>A small point sits on the counter of a partner venue.
+      Your phone touches it — that's the entire interaction. No app hunt, no QR squinting.</p></div>
+    <div class="step"><div class="n">2</div><h3>Receive</h3><p>The venue's card appears on your phone:
+      its colors, its art, its voice, a serial number — issued for that night, in that room.</p></div>
+    <div class="step"><div class="n">3</div><h3>Keep</h3><p>It joins your collection like a passport stamp
+      that finally looks the way the night felt. Verified, permanent, and impossible to counterfeit.</p></div>
+  </div>
+</section>
+
+<!-- GREETINGS FROM -->
+<section id="greetings">
+  <p class="kicker">The pilot collection</p>
+  <h2>Greetings from Berlin.</h2>
+  <p class="lede">Every card is unmistakably <b>its venue</b> — a regular should recognize it before
+  reading the name. Three of the first: pick one up.</p>
+  <div class="postcards" id="postcards"></div>
+</section>
+
+<!-- FOR VENUES -->
+<section id="venues">
+  <p class="kicker">For venues</p>
+  <h2>Your regulars already collect places.</h2>
+  <p class="lede">Ticket stubs. Passport stamps. Stickers on a laptop lid. People keep proof of the
+  places that matter to them — <b>give them yours, and give them a reason to come back for the next one.</b></p>
+
+  <div class="venue-grid">
+    <div class="vcard"><h3>A reason to return</h3><p>New editions for new nights — a season, a concert,
+      an anniversary. Collectors come back to complete the set, and bring the friend who doesn't have yours yet.</p></div>
+    <div class="vcard"><h3>A regular's badge</h3><p>Your card in someone's collection is belonging made
+      visible. The people who love your place finally have a way to show it that isn't a review.</p></div>
+    <div class="vcard"><h3>Marketing that is the place</h3><p>Every card carries your name, your art,
+      your light. When it's shared, what travels is the venue itself — not an ad about it.</p></div>
+  </div>
+
+  <div class="cta-row">
+    <a class="cta" href="mailto:makulovalexander@gmail.com?subject=Glyph%20pilot%20—%20our%20venue">Join the Berlin pilot</a>
+    <span class="cta-sub">We design the card with you, from your logo and your light.<br>
+    You put one small point on the counter. That's the whole setup.</span>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot-in">
+    <span>Glyph — Berlin · 2026</span>
+    <span>Really there.</span>
+  </div>
+</footer>
+
+<!-- FOCUS OVERLAY (one heavy card at a time) -->
+<div class="focus-overlay" id="focusOverlay" hidden>
+  <button class="focus-close" id="focusClose" aria-label="Close">✕</button>
+  <div class="scene" id="focusScene"></div>
+  <div class="focus-name" id="focusName"></div>
+  <div class="focus-hint">drag to tilt · click to flip · esc to close</div>
+</div>
+
+<script>
+/* ================= venue data — identity is per-card data, never global CSS ================= */
+const VENUES=[
+  { id:'hanuman', name:'HANUMAN', sub:'Thai Curry House', loc:'Kottbusser Damm · Kreuzberg',
+    tag:'"Я знаю, как надо."', event:'CURRY NIGHT — JUNE', editionOf:250, gold:true,
+    display:"'Anton',sans-serif", nameSize:34, bg:'halftone', heroArt:'hero-hanuman.svg',
+    vars:{'--p-bg1':'#FFD400','--p-bg2':'#F2B500','--p-ink':'#1A1206','--p-soft':'#7A2A12',
+          '--p-accent':'#E4002B','--p-line':'#1A1206','--p-frame-w':'3px','--p-frame-r':'6px',
+          '--p-display':"'Anton',sans-serif",'--p-tag-style':'normal'},
+    glow:'radial-gradient(60% 50% at 50% 70%, rgba(228,0,43,.18), transparent 70%)' },
+  { id:'skal', name:'Skál', sub:'Icelandic bar', loc:'Weserstraße · Neukölln',
+    tag:'one warm light in the cold', event:'WINTER OPENING', editionOf:120, gold:false,
+    display:"'Cormorant Garamond',serif", nameSize:44, bg:'gradient', heroArt:null,
+    vars:{'--p-bg1':'#171210','--p-bg2':'#0a0807','--p-ink':'#F2E3CE','--p-soft':'#C5A98B',
+          '--p-accent':'#7FB2E5','--p-line':'#8a6a45','--p-frame-w':'1px','--p-frame-r':'11px',
+          '--p-display':"'Cormorant Garamond',serif",'--p-tag-style':'italic'},
+    glow:'radial-gradient(55% 45% at 50% 38%, rgba(255,158,69,.22), transparent 70%)' },
+  { id:'institut', name:'Institut', sub:'Schuh-Reparaturen', loc:'Oranienstraße · Kreuzberg',
+    tag:'grandeur, glowing from the dark', event:'NACHTSCHICHT', editionOf:80, gold:false,
+    display:"'Cormorant Garamond',serif", nameSize:40, bg:'gradient', heroArt:null,
+    vars:{'--p-bg1':'#1a1212','--p-bg2':'#0b0708','--p-ink':'#EFD9C4','--p-soft':'#BD9678',
+          '--p-accent':'#FF6B2B','--p-line':'#8a4a33','--p-frame-w':'1px','--p-frame-r':'11px',
+          '--p-display':"'Cormorant Garamond',serif",'--p-tag-style':'italic'},
+    glow:'radial-gradient(50% 42% at 50% 30%, rgba(255,107,43,.20), transparent 72%)' }
+];
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= card factory ================= */
+function cardEl(v, serial, opts){
+  opts=opts||{};
+  const heavy=opts.heavy!==false;       // gallery/shelf thumbs stay cheap (no holo, no 3D)
+  const el=document.createElement('div');
+  el.className='card'+(heavy?' live':'')+(v.gold&&heavy?' gold':'');
+  el.dataset.bg=v.bg;
+  for(const k in v.vars) el.style.setProperty(k,v.vars[k]);
+  el.innerHTML=`
+    <div class="face front">
+      <div class="f-glow" style="background:${v.glow}"></div>
+      <div class="f-tex"></div>
+      ${v.heroArt?`<div class="f-hero-art"><img src="${v.heroArt}" alt=""></div>`:''}
+      <div class="f-frame"></div><div class="f-frame2"></div>
+      <div class="f-top"><span class="f-presence">Glyph</span>
+        <span class="f-edition">№ ${serial} / ${v.editionOf}</span></div>
+      <div class="f-rule"></div>
+      <div class="f-hero"><div class="f-name" style="font-size:${v.nameSize}px">${v.name}</div>
+        <div class="f-event">${v.event}</div></div>
+      <div class="f-loc">${v.loc}</div>
+      <div class="f-rule"></div>
+      <div class="f-date">BERLIN · 10 · 06 · 2026</div>
+      <div class="f-tag">${v.tag}</div>
+      ${heavy?`<div class="holo holo-rainbow"></div><div class="holo holo-gold"></div>
+      <div class="holo holo-sparkle"></div><div class="holo holo-glare"></div><div class="crt"></div>`:''}
+    </div>
+    <div class="face back">
+      <div class="b-guilloche"></div><div class="b-frame"></div>
+      <div class="b-emblem"><span>✦</span></div>
+      <div class="b-word">GLYPH</div>
+      <div class="b-sub">Really there</div>
+      <div class="b-foot">Issued on presence · Berlin</div>
+    </div>`;
+  if(!heavy){ el.style.transform='none'; el.style.transition='none'; el.style.cursor='default'; }
+  return el;
+}
+
+/* ================= proven tilt interaction (ported) ================= */
+function attachInteraction(cardEl, sceneEl, onFlip){
+  let flipped=false,dragging=false,hovering=false,rect=null,lastX=0,lastY=0,rafId=0,moved=false;
+  const clamp01=v=>Math.max(0,Math.min(1,v));
+  const canHover=()=>matchMedia('(hover:hover)').matches;
+  function refreshRect(){rect=sceneEl.getBoundingClientRect();}
+  function queue(x,y){lastX=x;lastY=y;if(!rafId)rafId=requestAnimationFrame(apply);}
+  function apply(){
+    rafId=0;if(!rect)refreshRect();
+    const px=clamp01((lastX-rect.left)/rect.width),py=clamp01((lastY-rect.top)/rect.height);
+    cardEl.style.setProperty('--ry',((px-0.5)*46+(flipped?180:0))+'deg');
+    cardEl.style.setProperty('--rx',(-(py-0.5)*46)+'deg');
+    cardEl.style.setProperty('--mx',(px*100)+'%');
+    cardEl.style.setProperty('--my',(py*100)+'%');
+    cardEl.style.setProperty('--glare',0.55);
+  }
+  function reset(){
+    if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+    cardEl.style.setProperty('--rx','8deg');
+    cardEl.style.setProperty('--ry',(flipped?194:-14)+'deg');
+    cardEl.style.setProperty('--mx','50%');cardEl.style.setProperty('--my','50%');
+    cardEl.style.setProperty('--glare',0.22);
+  }
+  function flip(){flipped=!flipped;reset();}
+  if(reduceMotion){ // static but still flippable + keyboard operable
+    sceneEl.addEventListener('click',flip);
+  }else{
+    sceneEl.addEventListener('pointerdown',e=>{dragging=true;moved=false;refreshRect();
+      cardEl.style.willChange='transform';sceneEl.setPointerCapture(e.pointerId);queue(e.clientX,e.clientY);});
+    sceneEl.addEventListener('pointermove',e=>{if(dragging){moved=true;}if(dragging||hovering)queue(e.clientX,e.clientY);});
+    sceneEl.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;
+      cardEl.style.willChange='auto';if(!moved)flip();else reset();});
+    sceneEl.addEventListener('pointercancel',()=>{dragging=false;cardEl.style.willChange='auto';reset();});
+    sceneEl.addEventListener('pointerenter',()=>{if(!dragging&&canHover()){hovering=true;refreshRect();cardEl.style.willChange='transform';}});
+    sceneEl.addEventListener('pointerleave',()=>{hovering=false;cardEl.style.willChange='auto';if(!dragging)reset();});
+  }
+  sceneEl.tabIndex=0;
+  sceneEl.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();flip();}});
+  return {flip,reset};
+}
+
+/* ================= tap demo ================= */
+const tappoint=document.getElementById('tappoint'),puck=document.getElementById('puck'),
+      reveal=document.getElementById('reveal'),scene=document.getElementById('scene'),
+      serialLine=document.getElementById('serialLine'),venuePick=document.getElementById('venuePick'),
+      shelfRow=document.getElementById('shelfRow');
+let chosen=VENUES[0],collected=[];
+
+VENUES.forEach((v,i)=>{
+  const b=document.createElement('button');
+  b.className='vbtn'+(i===0?' sel':'');b.textContent=v.name;
+  b.addEventListener('click',()=>{chosen=v;
+    venuePick.querySelectorAll('.vbtn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');});
+  venuePick.appendChild(b);
+});
+
+function serialFor(v){return String(Math.floor(Math.random()*v.editionOf)+1).padStart(String(v.editionOf).length,'0');}
+
+let demoCtl=null;
+function collect(){
+  const serial=serialFor(chosen);
+  puck.classList.add('rippling');
+  const go=()=>{
+    tappoint.classList.add('gone');
+    scene.innerHTML='';
+    const c=cardEl(chosen,serial,{heavy:true});
+    scene.appendChild(c);
+    scene.classList.remove('entering');void scene.offsetWidth;scene.classList.add('entering');
+    reveal.classList.add('on');
+    serialLine.innerHTML=`Issued · <b>${chosen.name}</b> · № ${serial} / ${chosen.editionOf}`;
+    demoCtl=attachInteraction(c,scene);
+    if(!collected.find(x=>x.id===chosen.id)){
+      collected.push(chosen);
+      const slot=shelfRow.querySelector('.shelf-slot');if(slot)slot.remove();
+      const t=document.createElement('div');t.className='shelf-thumb';
+      const mini=cardEl(chosen,serial,{heavy:false});mini.classList.add('mini');
+      t.appendChild(mini);shelfRow.appendChild(t);
+    }
+    setTimeout(()=>scene.classList.remove('entering'),1000);
+  };
+  reduceMotion?go():setTimeout(go,650);
+}
+puck.addEventListener('click',collect);
+document.getElementById('flipBtn').addEventListener('click',()=>demoCtl&&demoCtl.flip());
+document.getElementById('againBtn').addEventListener('click',()=>{
+  reveal.classList.remove('on');tappoint.classList.remove('gone');puck.classList.remove('rippling');
+  const next=VENUES[(VENUES.indexOf(chosen)+1)%VENUES.length];
+  if(collected.find(x=>x.id===chosen.id)){chosen=next;
+    venuePick.querySelectorAll('.vbtn').forEach((x,i)=>x.classList.toggle('sel',VENUES[i].id===chosen.id));}
+});
+
+/* ================= postcards gallery (cheap) + focus (heavy, one at a time) ================= */
+const postcards=document.getElementById('postcards'),
+      focusOverlay=document.getElementById('focusOverlay'),focusScene=document.getElementById('focusScene'),
+      focusName=document.getElementById('focusName'),focusClose=document.getElementById('focusClose');
+let lastFocusTrigger=null;
+
+VENUES.forEach(v=>{
+  const b=document.createElement('button');b.className='postcard';
+  const box=document.createElement('div');box.className='pc-thumbbox';
+  const mini=cardEl(v,'····',{heavy:false});mini.classList.add('mini');box.appendChild(mini);
+  b.appendChild(box);
+  b.insertAdjacentHTML('beforeend',
+    `<div class="pc-cap">Greetings from <b>${v.name}</b> — ${v.sub}</div>
+     <div class="pc-hint">pick it up ↗</div>`);
+  b.addEventListener('click',()=>openFocus(v,b));
+  postcards.appendChild(b);
+});
+
+function openFocus(v,trigger){
+  lastFocusTrigger=trigger;
+  focusScene.innerHTML='';
+  const c=cardEl(v,serialFor(v),{heavy:true});
+  focusScene.appendChild(c);
+  focusScene.classList.remove('entering');void focusScene.offsetWidth;focusScene.classList.add('entering');
+  focusName.textContent=`${v.name} — ${v.sub}`;
+  focusOverlay.hidden=false;
+  attachInteraction(c,focusScene);
+  focusClose.focus();
+  setTimeout(()=>focusScene.classList.remove('entering'),1000);
+}
+function closeFocus(){focusOverlay.hidden=true;focusScene.innerHTML='';
+  if(lastFocusTrigger)lastFocusTrigger.focus();}
+focusClose.addEventListener('click',closeFocus);
+focusOverlay.addEventListener('click',e=>{if(e.target===focusOverlay)closeFocus();});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!focusOverlay.hidden)closeFocus();});
+</script>
+</body>
+</html>

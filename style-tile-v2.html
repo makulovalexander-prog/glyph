@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glyph — Style Tile v2 · Holo Object / Dark Dashboard</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* ===================================================================
+   GLYPH STYLE TILE v2  —  kxd × older-brother-core
+   A holographic trading card sealed inside a 2000s console dashboard.
+   Dark vessel (Xbox-blades black + system green), screaming oil-slick
+   card. Self-hosted fonts only · no network · no CDN.
+   =================================================================== */
+:root{
+  /* vessel — dark dashboard */
+  --void:#07090c; --gunmetal:#12161c; --steel:#1c232c;
+  --ash:#8b97a4; --chalk:#e9eef3;
+  --glow:#92D02E; --glow-dim:#3c5a1e;
+  /* the scream (cards only) */
+  --neon-uv:#7a3cff; --neon-cyan:#00e5ff; --neon-acid:#b6ff00;
+  --thermal1:#ff3b1f; --thermal2:#ff8a00;
+  --bevel-hi:rgba(255,255,255,.10); --bevel-lo:rgba(0,0,0,.6);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;}
+body{
+  background:var(--void);color:var(--chalk);
+  font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+  min-height:100vh;line-height:1.5;
+  background-image:
+    radial-gradient(120% 90% at 12% -10%, rgba(146,208,46,.10) 0%, transparent 45%),
+    radial-gradient(120% 90% at 100% 0%, rgba(122,60,255,.10) 0%, transparent 42%),
+    radial-gradient(140% 120% at 50% 120%, rgba(255,90,30,.07) 0%, transparent 55%);
+}
+/* film grain + faint JPEG-crush grit, everywhere */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:99;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");}
+.wrap{max-width:1180px;margin:0 auto;padding:30px 28px 64px;position:relative;z-index:1;}
+
+/* chrome faceplate edge — the beveled 2000s panel */
+.bevel{border:1px solid var(--bevel-lo);
+  box-shadow:inset 0 1px 0 var(--bevel-hi), inset 0 0 28px rgba(0,0,0,.55), 0 18px 44px -18px #000;}
+
+/* ---------- masthead / HUD ---------- */
+.mast{display:flex;align-items:center;justify-content:space-between;gap:20px;
+  padding:14px 18px;border-radius:12px;background:linear-gradient(180deg,var(--gunmetal),#0c1014);}
+.brand{display:flex;align-items:baseline;gap:14px;}
+.brand h1{font-family:'Anton',sans-serif;font-weight:400;margin:0;font-size:42px;letter-spacing:.02em;
+  text-transform:uppercase;line-height:1;
+  background:linear-gradient(180deg,#fff 0%,#cfe6a3 38%,#6f8f33 55%,#dfeecb 70%,#fff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.6));}
+.brand .v{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.2em;color:var(--glow);}
+.hud{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.16em;
+  color:var(--ash);text-transform:uppercase;text-align:right;line-height:1.7;}
+.hud .on{color:var(--glow);}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--glow);
+  box-shadow:0 0 8px var(--glow);animation:pulse 2.4s ease-in-out infinite;vertical-align:middle;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--glow)}50%{opacity:.45;box-shadow:0 0 2px var(--glow)}}
+
+.tagline{font-family:'Anton',sans-serif;text-transform:uppercase;font-size:clamp(26px,5vw,52px);
+  line-height:.92;margin:26px 0 6px;letter-spacing:.01em;
+  color:var(--chalk);}
+.tagline .heat{
+  background:linear-gradient(180deg,#fff,#ffd27a 40%,var(--thermal1) 75%,#7a0f00);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.subline{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.18em;
+  color:var(--ash);text-transform:uppercase;margin-bottom:28px;}
+
+/* ---------- main split ---------- */
+.row{display:grid;grid-template-columns:minmax(320px,430px) 1fr;gap:26px;align-items:start;}
+@media(max-width:800px){.row{grid-template-columns:1fr;}}
+
+/* the dark faceplate case holding the jewel */
+.case{position:relative;border-radius:16px;padding:30px 24px 26px;overflow:hidden;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(146,208,46,.10), transparent 60%),
+    linear-gradient(180deg,#0e1318,#070a0d);}
+.case-label{font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--glow);opacity:.8;text-align:center;margin-bottom:18px;}
+.case-foot{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ash);opacity:.65;text-align:center;margin-top:18px;}
+
+/* ===================================================================
+   THE OBJECT — one tessera, faithful 300×420, allowed to scream.
+   Hanuman recolored dark: black ground + acid-green/thermal glow,
+   oil-slick holo (the Radiant-Drift look), CRT wink on focus.
+   =================================================================== */
+.scene{perspective:1100px;display:flex;justify-content:center;}
+.card{
+  --p-ink:#eef6df; --p-soft:#9fb27a; --p-accent:#ff5a2a;
+  position:relative;width:300px;height:420px;border-radius:18px;cursor:grab;
+  transform-style:preserve-3d;transition:transform .12s ease-out;
+  box-shadow:0 30px 60px -18px #000, 0 0 0 1px rgba(146,208,46,.12);
+}
+.card:active{cursor:grabbing;}
+.front{position:absolute;inset:0;border-radius:18px;overflow:hidden;backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;padding:18px 16px;color:var(--p-ink);
+  background:
+    radial-gradient(90% 60% at 50% 86%, rgba(255,90,30,.34), transparent 60%),
+    radial-gradient(95% 70% at 50% 30%, rgba(146,208,46,.20), transparent 62%),
+    linear-gradient(180deg,#0b0f0a,#05060a);}
+.f-tex{position:absolute;inset:0;pointer-events:none;opacity:.16;
+  background-image:radial-gradient(rgba(146,208,46,.5) 1px,transparent 1.4px);background-size:7px 7px;}
+.f-frame{position:absolute;inset:13px;border-radius:12px;pointer-events:none;
+  border:1px solid rgba(146,208,46,.5);box-shadow:inset 0 0 14px rgba(146,208,46,.18), 0 0 0 1px rgba(0,0,0,.6);}
+.f-hero-art{position:absolute;left:0;right:0;top:34%;bottom:9%;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
+.f-hero-art img{max-width:60%;max-height:100%;object-fit:contain;
+  filter:drop-shadow(0 0 14px rgba(255,90,30,.55)) drop-shadow(0 0 3px rgba(146,208,46,.6));}
+
+.f-top{display:flex;justify-content:space-between;width:100%;z-index:2;
+  font-family:ui-monospace,Menlo,monospace;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:var(--p-soft);}
+.f-rule{width:80%;height:1px;background:linear-gradient(90deg,transparent,var(--glow),transparent);margin:8px 0;z-index:2;opacity:.8;}
+.f-name{font-family:'Anton',sans-serif;text-transform:uppercase;text-align:center;line-height:.88;
+  font-size:54px;z-index:2;letter-spacing:.01em;
+  background:linear-gradient(180deg,#fff,#dff0bd 45%,#7fa53a 60%,#eaf6d2);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 1px rgba(0,0,0,.5));}
+.f-event{font-family:'Inter',sans-serif;font-weight:800;text-transform:uppercase;text-align:center;
+  color:var(--p-accent);font-size:12px;line-height:1.2;letter-spacing:2.5px;z-index:2;margin-top:5px;
+  text-shadow:0 0 10px rgba(255,90,30,.6);}
+.f-spacer{flex:1;}
+.f-loc{font-family:ui-monospace,Menlo,monospace;font-size:8px;letter-spacing:.32em;color:var(--p-soft);text-transform:uppercase;z-index:2;margin-top:auto;}
+.f-date{font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.2em;color:var(--p-ink);opacity:.85;z-index:2;margin-top:5px;}
+.f-tag{font-family:'Anton',sans-serif;font-style:normal;font-size:12px;color:var(--p-soft);z-index:2;margin-top:5px;letter-spacing:.04em;text-transform:uppercase;}
+
+/* ---- oil-slick holo stack (the only loud color in the document) ---- */
+.holo{position:absolute;inset:0;border-radius:18px;pointer-events:none;}
+.holo-oil{mix-blend-mode:color-dodge;opacity:.55;
+  background:
+    conic-gradient(from 0deg at 30% 30%,
+      #00e5ff,#7a3cff,#ff2d9b,#ff8a00,#b6ff00,#00e5ff);
+  background-size:280% 280%;filter:blur(1px) saturate(1.3);}
+.holo-streak{mix-blend-mode:color-dodge;opacity:.4;
+  background:repeating-linear-gradient(68deg,
+    rgba(0,229,255,.6) 0 10px, rgba(182,255,0,.5) 10px 20px,
+    rgba(255,45,155,.6) 20px 30px, rgba(122,60,255,.6) 30px 40px,
+    rgba(0,229,255,.6) 40px 50px);
+  background-size:300% 300%;}
+.holo-chrome{mix-blend-mode:soft-light;opacity:.5;
+  background:linear-gradient(120deg,#fff,rgba(154,162,173,.2) 40%,#fff 60%,rgba(0,0,0,.3));
+  background-size:250% 250%;}
+.holo-glare{mix-blend-mode:screen;
+  background:radial-gradient(circle at var(--gx,50%) var(--gy,40%),
+    rgba(255,255,255,.5),rgba(255,255,255,.05) 36%,transparent 58%);opacity:.5;}
+.crt{position:absolute;inset:0;border-radius:18px;pointer-events:none;mix-blend-mode:overlay;opacity:0;transition:opacity .5s;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.55) 0 1px,transparent 1px 3px);}
+.scene:hover .crt,.card.lit .crt{opacity:.2;}
+
+.hint{font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--glow);opacity:.6;text-align:center;margin-top:14px;}
+
+/* ---------- spec rail (dashboard blades) ---------- */
+.rail{display:flex;flex-direction:column;gap:20px;}
+.panel{position:relative;border-radius:12px;padding:18px;overflow:hidden;
+  background:linear-gradient(180deg,var(--gunmetal),#0c1014);}
+.panel h2{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;font-size:14px;
+  letter-spacing:.08em;margin:0 0 14px;color:var(--chalk);display:flex;align-items:center;gap:8px;}
+.panel h2::before{content:"";width:4px;height:14px;background:var(--glow);box-shadow:0 0 8px var(--glow);border-radius:1px;}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+.sw{border-radius:7px;height:58px;position:relative;overflow:hidden;display:flex;align-items:flex-end;
+  box-shadow:inset 0 1px 0 var(--bevel-hi),inset 0 0 0 1px rgba(0,0,0,.5);}
+.sw span{font-family:ui-monospace,Menlo,monospace;font-size:7.5px;letter-spacing:.02em;
+  padding:4px 5px;line-height:1.3;color:#fff;text-shadow:0 1px 3px #000;}
+.cap{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--glow);opacity:.85;margin:14px 0 8px;}
+.loud-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.loud{height:32px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.5);}
+
+.spec-display{font-family:'Anton',sans-serif;font-size:30px;line-height:.9;text-transform:uppercase;
+  background:linear-gradient(180deg,#fff,#cfe6a3 50%,#6f8f33 62%,#fff);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.spec-mono{font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:.14em;color:var(--glow);margin-top:10px;text-transform:uppercase;}
+.spec-mono .bar{color:var(--glow-dim);}
+.spec-body{font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ash);margin-top:8px;line-height:1.5;}
+
+.voice{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  padding:6px 10px;border-radius:5px;background:#0c1014;color:var(--chalk);
+  box-shadow:inset 0 0 0 1px rgba(146,208,46,.35);}
+.chip.heat{color:var(--thermal2);box-shadow:inset 0 0 0 1px rgba(255,90,30,.5);}
+
+/* ---------- gallery contact strip (flat — engineering floor #1) ---------- */
+.gallery{margin-top:40px;}
+.gallery h2{font-family:'Anton',sans-serif;font-weight:400;text-transform:uppercase;font-size:16px;letter-spacing:.08em;color:var(--chalk);margin:0 0 4px;}
+.gallery .note{font-family:ui-monospace,Menlo,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ash);margin:0 0 18px;}
+.strip{display:flex;gap:16px;flex-wrap:wrap;}
+.thumb{width:150px;height:210px;border-radius:9px;overflow:hidden;position:relative;
+  display:flex;flex-direction:column;align-items:center;padding:12px 10px;
+  box-shadow:inset 0 1px 0 var(--bevel-hi),0 12px 26px -14px #000;}
+.thumb .tn{font-family:'Anton',sans-serif;text-transform:uppercase;line-height:.88;text-align:center;margin-top:auto;}
+.thumb .te{font-family:'Inter',sans-serif;font-weight:800;text-transform:uppercase;font-size:8px;letter-spacing:1.5px;margin-top:4px;}
+.thumb .tl{font-family:ui-monospace,Menlo,monospace;font-size:6.5px;letter-spacing:2px;text-transform:uppercase;margin-top:auto;opacity:.75;}
+.thumb .thair{width:70%;height:1px;margin:7px 0;}
+/* Hanuman — loud neon-void */
+.t-hanuman{background:radial-gradient(80% 55% at 50% 80%,rgba(255,90,30,.3),transparent 60%),radial-gradient(90% 60% at 50% 25%,rgba(146,208,46,.22),transparent 60%),#06080b;border:1px solid rgba(146,208,46,.4);}
+.t-hanuman .tn{font-size:30px;color:#eaf6d2;}.t-hanuman .te{color:#ff5a2a;}.t-hanuman .thair{background:rgba(146,208,46,.6);}.t-hanuman .tl{color:#9fb27a;}
+/* Icelandic bar — light-grounded option (the fork) */
+.t-iceland{background:linear-gradient(180deg,#e9eef3,#c7cdd4);color:#12161c;border:1px solid rgba(0,0,0,.25);}
+.t-iceland .tn{font-family:'Cormorant Garamond',serif;font-size:30px;color:#12161c;}
+.t-iceland .te{color:#1f5fbf;}.t-iceland .thair{background:rgba(0,0,0,.4);}.t-iceland .tl{color:#5a6470;}
+.t-iceland .flag{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:34px;height:22px;border-radius:2px;
+  background:linear-gradient(180deg,#1f5fbf 45%,#fff 45% 55%,#1f5fbf 55%);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.t-iceland .flag::after{content:"";position:absolute;top:0;bottom:0;left:9px;width:5px;background:#d4452f;box-shadow:-2px 0 0 #fff,3px 0 0 #fff;}
+/* Institut — ember in the dark */
+.t-institut{background:radial-gradient(40% 30% at 50% 33%,rgba(255,170,70,.6),transparent 65%),linear-gradient(180deg,#1a120c,#070605);color:#f0d9b0;border:1px solid rgba(224,168,90,.3);}
+.t-institut .tn{font-size:20px;color:#f5e3c2;letter-spacing:.03em;}.t-institut .te{color:#e0a85a;}.t-institut .thair{background:rgba(224,168,90,.5);}.t-institut .tl{color:#b89a72;}
+.t-institut .win{position:absolute;top:34px;left:50%;transform:translateX(-50%);width:24px;height:42px;border-radius:3px 3px 0 0;
+  background:linear-gradient(180deg,#ffe09a,#e0a85a);box-shadow:0 0 26px 7px rgba(255,170,70,.6);}
+
+.disclaimer{margin-top:38px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);
+  font-family:ui-monospace,Menlo,monospace;font-size:9px;letter-spacing:.1em;line-height:1.8;color:var(--ash);text-transform:uppercase;}
+
+@media (prefers-reduced-motion:reduce){
+  .card{transition:none!important;}
+  .holo-oil,.holo-streak,.holo-chrome{background-position:50% 50%!important;}
+  .crt{display:none!important;} .dot{animation:none!important;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast bevel">
+    <div class="brand">
+      <h1>Glyph</h1><span class="v">v2 · BLADES</span>
+    </div>
+    <div class="hud">
+      <span class="dot"></span> <span class="on">System Online</span><br>
+      Loud object / dark dashboard<br>
+      Berlin field set · ED №001
+    </div>
+  </header>
+
+  <h2 class="tagline">No Desire <span class="heat">To Fit In</span></h2>
+  <div class="subline">— a holographic card, sealed in a 2000s console UI · kxd × older-brother-core —</div>
+
+  <div class="row">
+
+    <!-- THE CASE + OBJECT -->
+    <section class="case bevel">
+      <div class="case-label">▸ focus view · disc tray open · one card at a time</div>
+      <div class="scene">
+        <div class="card lit" id="card">
+          <div class="front">
+            <div class="f-tex"></div>
+            <div class="f-top"><span>Verified Presence</span><span>№001 / 100</span></div>
+            <div class="f-rule"></div>
+            <div class="f-name">Hanuman</div>
+            <div class="f-event">Kitchen Session · 1 Yr</div>
+            <div class="f-hero-art"><img src="hero-hanuman.svg" alt="Hanuman emblem"></div>
+            <div class="f-spacer"></div>
+            <div class="f-loc">Neukölln · Berlin</div>
+            <div class="f-date">01 · VI · 2026</div>
+            <div class="f-tag">Trust — Established</div>
+            <div class="f-frame"></div>
+          </div>
+          <div class="holo holo-oil"></div>
+          <div class="holo holo-streak"></div>
+          <div class="holo holo-chrome"></div>
+          <div class="holo holo-glare"></div>
+          <div class="crt"></div>
+        </div>
+      </div>
+      <div class="hint">move pointer over card — tilt + oil-slick holo are live</div>
+      <div class="case-foot">back face = the house faceplate · constant across the set</div>
+    </section>
+
+    <!-- SPEC RAIL -->
+    <div class="rail">
+      <section class="panel bevel">
+        <h2>The Vessel — dark dashboard</h2>
+        <div class="swatches">
+          <div class="sw" style="background:#07090c"><span>void<br>#07090C</span></div>
+          <div class="sw" style="background:#12161c"><span>gunmetal<br>#12161C</span></div>
+          <div class="sw" style="background:#1c232c"><span>steel<br>#1C232C</span></div>
+          <div class="sw" style="background:#92D02E"><span>xbox glow<br>#92D02E</span></div>
+        </div>
+        <div class="cap">The Object — the scream (foil + venue accents only)</div>
+        <div class="loud-row">
+          <div class="loud" style="background:conic-gradient(from 0deg,#00e5ff,#7a3cff,#ff2d9b,#ff8a00,#b6ff00,#00e5ff)"></div>
+          <div class="loud" style="background:#7a3cff"></div>
+          <div class="loud" style="background:#00e5ff"></div>
+          <div class="loud" style="background:#b6ff00"></div>
+          <div class="loud" style="background:linear-gradient(90deg,#ff3b1f,#ff8a00)"></div>
+        </div>
+      </section>
+
+      <section class="panel bevel">
+        <h2>Three Voices</h2>
+        <div class="spec-display">Anton — chrome display</div>
+        <div class="spec-mono">HUD MONO · ED №001 · 52°29′N 13°25′E<br><span class="bar">■■■■■■■□□□</span> 71% VERIFIED</div>
+        <div class="spec-body">Inter carries controls + prose — neutral, never competing with the foil.</div>
+      </section>
+
+      <section class="panel bevel">
+        <h2>Voice &amp; Attitude</h2>
+        <div class="voice">
+          <span class="chip heat">Trust — Established</span>
+          <span class="chip">It's Already Yours</span>
+          <span class="chip">Nothing Verified Yet</span>
+          <span class="chip heat">Я Знаю Как Надо</span>
+          <span class="chip">No Desire To Fit In</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <section class="gallery">
+    <h2>Gallery — the collection</h2>
+    <p class="note">flat tiles · no holo, no 3D · the scream is rationed to one focused card</p>
+    <div class="strip">
+      <div class="thumb t-hanuman">
+        <div class="te" style="align-self:flex-start;opacity:.7;color:#9fb27a">№001/100</div>
+        <div class="tn">Hanuman</div><div class="te">Kitchen Session</div>
+        <div class="thair"></div><div class="tl">Neukölln · Berlin</div>
+      </div>
+      <div class="thumb t-iceland">
+        <div class="flag"></div>
+        <div class="tn">Ísbar</div><div class="te">Lunch Service</div>
+        <div class="thair"></div><div class="tl">Prenzlauer Berg · light-grounded card</div>
+      </div>
+      <div class="thumb t-institut">
+        <div class="win"></div>
+        <div class="tn">Schuh<br>Reparaturen</div><div class="te">After Hours</div>
+        <div class="thair"></div><div class="tl">Südwest · Berlin</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    Probe only — not the shipping app · honors CLAUDE.md floor: self-hosted fonts, no network,
+    flat holo-free gallery, seamless holo, event ≤ name, AA contrast on dark, reduced-motion freezes.
+  </div>
+</div>
+
+<script>
+(function(){
+  var card=document.getElementById('card'),scene=card.parentElement;
+  var oil=card.querySelector('.holo-oil'),streak=card.querySelector('.holo-streak'),
+      chrome=card.querySelector('.holo-chrome'),glare=card.querySelector('.holo-glare');
+  var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function move(e){
+    var r=card.getBoundingClientRect();
+    var px=(e.clientX-r.left)/r.width, py=(e.clientY-r.top)/r.height;
+    if(!reduce) card.style.transform='rotateX('+((0.5-py)*15)+'deg) rotateY('+((px-0.5)*15)+'deg)';
+    // seamless: bounded centred position, image larger than box → no repeat-seam
+    var bx=50+(px-0.5)*60, by=50+(py-0.5)*60;
+    if(!reduce){
+      oil.style.backgroundPosition=bx+'% '+by+'%';
+      streak.style.backgroundPosition=(100-bx)+'% '+(100-by)+'%';
+      chrome.style.backgroundPosition=bx+'% '+(100-by)+'%';
+    }
+    glare.style.setProperty('--gx',(px*100)+'%');
+    glare.style.setProperty('--gy',(py*100)+'%');
+  }
+  scene.addEventListener('pointermove',move);
+  scene.addEventListener('pointerleave',function(){card.style.transform='';});
+})();
+</script>
+</body>
+</html>
