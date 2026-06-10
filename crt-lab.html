@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0c10">
+<title>Glyph — CRT Lab (the focus-moment prototype)</title>
+<link rel="icon" href="favicon.svg">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+@property --cardglow{syntax:'<number>';inherits:true;initial-value:0.18;}
+:root{--bg:#0a0c10;--panel:#14171d;--line:rgba(255,255,255,.08);--ink:#eceef2;--soft:#9aa0ab;--accent:#8b8cf0;
+  --thermal:#ff8a00;--thermal2:#ff3b1f;--acid:#b6ff00;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;gap:18px;padding:28px 16px 50px;}
+/* the room stays matte & calm (vessel register) */
+body::before{content:"";position:fixed;inset:-20% -10%;z-index:0;pointer-events:none;filter:blur(60px);opacity:.5;
+  background:radial-gradient(38% 32% at 18% 12%,#161a2e,transparent 70%),
+             radial-gradient(42% 36% at 88% 8%,#241a30,transparent 70%),
+             radial-gradient(50% 40% at 60% 100%,#122428,transparent 72%);}
+.shell{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14px;max-width:760px;}
+.wordmark{font-family:'Anton',sans-serif;font-size:16px;letter-spacing:5px;}
+.wordmark small{font-family:'Inter';font-size:10px;letter-spacing:2px;color:var(--soft);margin-left:10px;text-transform:uppercase;}
+.lede{font-size:12px;color:var(--soft);line-height:1.6;text-align:center;max-width:560px;}
+.btn{background:var(--panel);border:0.5px solid var(--line);border-radius:999px;padding:9px 18px;color:var(--ink);
+  font-size:10.5px;letter-spacing:1.5px;cursor:pointer;font-family:inherit;text-transform:uppercase;transition:border-color .15s;}
+.btn:hover{border-color:var(--accent);}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+/* ================= the CRT (object register — spectacle allowed) ================ */
+.crt-bezel{position:relative;border-radius:26px;padding:22px;
+  background:linear-gradient(165deg,#23262d,#101216 60%,#181b21);
+  box-shadow:0 30px 70px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08),inset 0 -2px 6px rgba(0,0,0,.6);}
+.crt-bezel::after{content:"GLYPH · TUBE 01";position:absolute;bottom:7px;left:0;right:0;text-align:center;
+  font-size:7px;letter-spacing:4px;color:#5a5f6b;}
+.crt{position:relative;width:min(420px,78vw);aspect-ratio:4/5;border-radius:18px;overflow:hidden;
+  background:#040506;
+  /* slight bulge illusion: radius + inner shading; honest barrel warp would be feDisplacementMap/WebGL (see RETRO-DIRECTION §2) */
+  box-shadow:inset 0 0 60px rgba(0,0,0,.85);}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  transform:scale(var(--pw,1),var(--ph,1));}
+/* --- overlays, all ~free: scanlines, aperture grille, vignette, glass glare --- */
+.scanlines{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:var(--scan,.55);
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px);}
+.grille{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:.18;mix-blend-mode:overlay;
+  background:repeating-linear-gradient(90deg,rgba(255,60,60,.7) 0 1px,rgba(60,255,90,.7) 1px 2px,rgba(80,120,255,.7) 2px 3px);}
+.vignette{position:absolute;inset:0;pointer-events:none;z-index:7;
+  background:radial-gradient(ellipse at 50% 48%,transparent 55%,rgba(0,0,0,.55) 92%);}
+.glass{position:absolute;inset:0;pointer-events:none;z-index:8;
+  background:radial-gradient(42% 26% at 30% 16%,rgba(255,255,255,.07),transparent 70%);}
+/* static phosphor grain — baked SVG turbulence tile, no runtime cost */
+.grain{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.9'/%3E%3C/svg%3E");}
+
+/* ================= the tessera on screen ================ */
+.tcard{position:relative;width:62%;aspect-ratio:5/7;border-radius:12px;overflow:hidden;z-index:3;
+  background:linear-gradient(160deg,#202122,#3d1a14);
+  box-shadow:0 18px 44px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06),0 0 34px rgba(255,138,0,var(--cardglow,.18));}
+.tcard::after{content:"";position:absolute;inset:0;opacity:.12;pointer-events:none; /* halftone grit */
+  background-image:radial-gradient(#F4F1EA 1px,transparent 1.4px);background-size:5px 5px;}
+.tframe{position:absolute;inset:9px;border:1px solid #7F7F7C;border-radius:7px;opacity:.5;}
+.ttop{position:absolute;left:13px;right:13px;top:10px;display:flex;justify-content:space-between;
+  font-size:7px;letter-spacing:3px;text-transform:uppercase;color:#cdbf96;}
+/* chromatic aberration on the display type — pure text-shadow */
+.tname{position:absolute;left:6%;right:6%;top:48%;text-align:center;font-family:'Anton',sans-serif;
+  font-size:clamp(22px,6.4vw,34px);letter-spacing:2px;color:#F4F1EA;
+  text-shadow:-1.5px 0 rgba(255,40,40,.6),1.5px 0 rgba(40,230,255,.6),0 0 18px rgba(255,138,0,.5);}
+.tev{position:absolute;left:6%;right:6%;top:48%;margin-top:clamp(30px,8vw,44px);text-align:center;
+  font-size:8px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--acid);}
+.tmeta{position:absolute;left:0;right:0;bottom:10px;text-align:center;
+  font-family:ui-monospace,Menlo,monospace;font-size:7.5px;letter-spacing:2px;color:#cdbf96;min-height:1em;}
+.holo{position:absolute;inset:0;pointer-events:none;mix-blend-mode:color-dodge;opacity:var(--holo,0);
+  background:repeating-linear-gradient(110deg,#00e5ff 0%,#7a3cff 10%,#ff2d9b 20%,#ff8a00 30%,#b6ff00 40%,#00e5ff 50%);
+  background-size:300% 300%;background-position:var(--hx,50%) var(--hy,50%);
+  filter:brightness(.8) contrast(1.5) saturate(1.25);transition:opacity .4s;}
+/* the pixel mascot — 16px sprite drawn with box-shadow, upscaled crisp */
+.sprite{position:absolute;bottom:14%;left:50%;width:4px;height:4px;z-index:4;transform:translateX(-50%) scale(3);
+  image-rendering:pixelated;}
+.sprite i{position:absolute;width:1px;height:1px;background:var(--thermal);
+  box-shadow:
+    0 -7px 0 var(--thermal),  /* head */
+    0 -5px 0 var(--thermal),0 -4px 0 var(--thermal),0 -3px 0 var(--thermal), /* body */
+    -1px -6px 0 var(--thermal),1px -6px 0 var(--thermal), /* arms up */
+    -2px -7px 0 var(--thermal),2px -7px 0 var(--thermal),
+    -1px -2px 0 var(--thermal),1px -2px 0 var(--thermal), /* legs */
+    -1px -1px 0 var(--thermal),1px -1px 0 var(--thermal);}
+
+/* ================= the turn-on sequence ================ */
+/* OFF state */
+.crt[data-state="off"] .screen{--pw:0;--ph:0;}
+.crt[data-state="off"] .scanlines,.crt[data-state="off"] .grille{opacity:0;}
+/* BOOT: power-on collapse-expand (old tube), degauss wobble, scanlines resolve, card glows awake */
+@media (prefers-reduced-motion: no-preference){
+  .crt[data-state="boot"] .screen{animation:tubeOn 1s cubic-bezier(.2,.8,.2,1) both;}
+  @keyframes tubeOn{
+    0%{transform:scale(1,.004);filter:brightness(6);}
+    35%{transform:scale(.7,.01);filter:brightness(8);}
+    55%{transform:scale(1.02,.6);filter:brightness(2.2) saturate(.4);}
+    78%{transform:scale(.995,1.01);filter:brightness(1.2) hue-rotate(8deg);}
+    100%{transform:scale(1,1);filter:none;}}
+  .crt[data-state="boot"] .scanlines{animation:fadein .7s .5s both;}
+  .crt[data-state="boot"] .grille{animation:fadein .7s .6s both;}
+  .crt[data-state="boot"] .tcard{animation:cardWake 1.4s .55s both;}
+  @keyframes cardWake{from{--cardglow:0;transform:translateY(6px);}to{--cardglow:.3;transform:none;}}
+  .crt[data-state="boot"] .sprite,.crt[data-state="on"] .sprite{animation:spriteHop 1.2s 1.5s both;}
+  @keyframes spriteHop{0%{transform:translateX(-50%) translateY(10px) scale(3);opacity:0;}
+    40%{transform:translateX(-50%) translateY(-3px) scale(3);opacity:1;}
+    60%{transform:translateX(-50%) translateY(1px) scale(3);}
+    100%{transform:translateX(-50%) translateY(0) scale(3);opacity:1;}}
+  .crt[data-state="boot"] .holo{transition-delay:1.6s;}
+  @keyframes fadein{from{opacity:0;}}
+}
+.crt[data-state="boot"] .holo,.crt[data-state="on"] .holo{--holo:.42;}
+.crt[data-state="boot"] .sprite,.crt[data-state="on"] .sprite{opacity:1;}
+.crt[data-state="off"] .sprite{opacity:0;}
+/* reduced motion: boot == on, fully static, identical layout */
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important;}
+  .crt[data-state="boot"] .screen,.crt[data-state="on"] .screen{--pw:1;--ph:1;}
+  .holo{background-position:50% 50% !important;}
+}
+.panel{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;}
+.panel label{font-size:10px;color:var(--soft);letter-spacing:1px;text-transform:uppercase;display:flex;gap:6px;align-items:center;}
+.panel input[type=range]{accent-color:var(--accent);width:110px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="wordmark">GLYPH<small>CRT lab — the focus / mint moment</small></div>
+  <p class="lede">Prototype of the "turn-on grammar" (RETRO-DIRECTION §3): tube power-on →
+  scanlines resolve → the card wakes → foil breathes → the glyph figure arrives, arms up.
+  The room around the tube stays matte — spectacle is screen-only. Tilt: move the pointer over the tube.</p>
+
+  <div class="crt-bezel">
+    <div class="crt" id="crt" data-state="off">
+      <div class="screen" id="screen">
+        <div class="tcard" id="card">
+          <div class="tframe"></div>
+          <div class="ttop"><span>Glyph</span><span>№ 007 / 250</span></div>
+          <div class="tname">HANUMAN</div>
+          <div class="tev">JUNGLE CURRY · TONIGHT</div>
+          <div class="sprite"><i></i></div>
+          <div class="tmeta" id="tmeta"></div>
+          <div class="holo" id="holo"></div>
+        </div>
+        <div class="grain"></div>
+      </div>
+      <div class="scanlines" id="scan"></div>
+      <div class="grille"></div>
+      <div class="vignette"></div>
+      <div class="glass"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <button class="btn" id="power">⏻ power on</button>
+    <label>scanlines <input type="range" id="scanAmt" min="0" max="100" value="55"></label>
+  </div>
+</div>
+<script>
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const crt=document.getElementById('crt'),holo=document.getElementById('holo'),
+      card=document.getElementById('card'),tmeta=document.getElementById('tmeta');
+const META='SKALITZER STR. 96 · 10.06.2026';
+let typed=0,typeTimer=null;
+function typeMeta(){
+  clearInterval(typeTimer);typed=0;tmeta.textContent='';
+  if(reduceMotion){tmeta.textContent=META;return;}
+  typeTimer=setInterval(()=>{
+    tmeta.textContent=META.slice(0,++typed)+(typed<META.length?'▌':'');
+    if(typed>=META.length)clearInterval(typeTimer);
+  },42);
+}
+document.getElementById('power').addEventListener('click',e=>{
+  if(crt.dataset.state==='off'){
+    crt.dataset.state='boot';
+    e.target.textContent='⏻ power off';
+    setTimeout(typeMeta,reduceMotion?0:1900);
+    if(!reduceMotion)setTimeout(()=>{if(crt.dataset.state==='boot')crt.dataset.state='on';},3200);
+  }else{
+    crt.dataset.state='off';clearInterval(typeTimer);tmeta.textContent='';
+    e.target.textContent='⏻ power on';
+  }
+});
+document.getElementById('scanAmt').addEventListener('input',e=>{
+  document.getElementById('scan').style.setProperty('--scan',e.target.value/100);
+  document.getElementById('scan').style.opacity=e.target.value/100;
+});
+/* pointer-driven foil — ONE card, focus context only (floor rule 2) */
+let raf=0;
+crt.addEventListener('pointermove',e=>{
+  if(reduceMotion||crt.dataset.state==='off'||raf)return;
+  raf=requestAnimationFrame(()=>{
+    raf=0;
+    const r=crt.getBoundingClientRect();
+    const px=(e.clientX-r.left)/r.width,py=(e.clientY-r.top)/r.height;
+    holo.style.setProperty('--hx',(30+px*40)+'%');
+    holo.style.setProperty('--hy',(30+py*40)+'%');
+    card.style.transform=`rotateY(${(px-.5)*14}deg) rotateX(${-(py-.5)*14}deg)`;
+  });
+});
+crt.addEventListener('pointerleave',()=>{card.style.transform='';});
+</script>
+</body>
+</html>
