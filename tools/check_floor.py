@@ -20,7 +20,8 @@ fails, warns = [], []
 # ---------- 1. No runtime network ----------
 STATIC_FILES = ["index.html", "app.js", "styles.css", "fonts/fonts.css", "campaign.html",
                 "studio-v2.html", "themes/generated.js",
-                "style-tile.html", "style-tile-v2.html", "style-tile-v3.html"]
+                "style-tile.html", "style-tile-v2.html", "style-tile-v3.html",
+                "logo-lab.html", "tessera-concepts.html", "crt-lab.html"]
 URL_RE = re.compile(r"https?://[^\s'\"<>)]+")
 for rel in STATIC_FILES:
     p = ROOT / rel
