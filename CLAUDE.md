@@ -81,6 +81,14 @@ background treatments, new holo tiers) — just migrate old saved designs and ke
 `getTheme(d)` tolerant of legacy fields (older designs carry a `palette` string
 mapped via `paletteToPreset`).
 
+## Delegation & memory (added 2026-06-11)
+Project agents live in `.claude/agents/` (planner, code/react/security
+reviewers, build-error-resolver — see `.claude/ECC-PROVENANCE.md`); use them
+for platform/ work and sensitive surfaces. Reference rules in `.claude/rules/`
+load on demand — don't auto-import them all. Session memory: read
+`SESSION-HANDOFF.md` on resume, update it before ending substantial sessions
+(`session-handoff` skill).
+
 ## Verify after visual changes
 Match checks to the engineering floor, not the old aesthetic:
 - offline load works — no network requests, fonts render (grep for `http`/CDN);
