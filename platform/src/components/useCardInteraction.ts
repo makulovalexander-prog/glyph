@@ -17,9 +17,9 @@ export function useCardInteraction(
   const controls = useRef<CardControls>({ flip: () => {}, reset: () => {} });
 
   useEffect(() => {
+    if (!sceneRef.current || !cardRef.current || !enabled) return;
     const scene = sceneRef.current;
     const card = cardRef.current;
-    if (!scene || !card || !enabled) return;
 
     let flipped = false;
     let dragging = false;
